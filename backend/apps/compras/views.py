@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import ComprasModel
+from .serializers import ComprasSerializer
 
-# Create your views here.
+class ComprasViewSet(viewsets.ModelViewSet):
+    queryset = ComprasModel.objects.all()
+    serializer_class = ComprasSerializer

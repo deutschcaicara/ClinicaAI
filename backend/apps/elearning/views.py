@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import ElearningModel
+from .serializers import ElearningSerializer
 
-# Create your views here.
+class ElearningViewSet(viewsets.ModelViewSet):
+    queryset = ElearningModel.objects.all()
+    serializer_class = ElearningSerializer

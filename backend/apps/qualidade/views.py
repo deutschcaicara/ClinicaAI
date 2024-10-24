@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import QualidadeModel
+from .serializers import QualidadeSerializer
 
-# Create your views here.
+class QualidadeViewSet(viewsets.ModelViewSet):
+    queryset = QualidadeModel.objects.all()
+    serializer_class = QualidadeSerializer

@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import FabricacaoModel
 
-# Register your models here.
+@admin.register(FabricacaoModel)
+class FabricacaoAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'criado_em', 'atualizado_em')

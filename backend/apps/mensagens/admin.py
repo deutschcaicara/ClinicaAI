@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import MensagensModel
 
-# Register your models here.
+@admin.register(MensagensModel)
+class MensagensAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'criado_em', 'atualizado_em')

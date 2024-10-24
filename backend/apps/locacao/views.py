@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import LocacaoModel
+from .serializers import LocacaoSerializer
 
-# Create your views here.
+class LocacaoViewSet(viewsets.ModelViewSet):
+    queryset = LocacaoModel.objects.all()
+    serializer_class = LocacaoSerializer

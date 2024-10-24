@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import CrmModel
+from .serializers import CrmSerializer
 
-# Create your views here.
+class CrmViewSet(viewsets.ModelViewSet):
+    queryset = CrmModel.objects.all()
+    serializer_class = CrmSerializer

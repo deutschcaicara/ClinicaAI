@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import AssinaturasModel
 
-# Register your models here.
+@admin.register(AssinaturasModel)
+class AssinaturasAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'criado_em', 'atualizado_em')

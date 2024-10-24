@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import DocumentosModel
+from .serializers import DocumentosSerializer
 
-# Create your views here.
+class DocumentosViewSet(viewsets.ModelViewSet):
+    queryset = DocumentosModel.objects.all()
+    serializer_class = DocumentosSerializer

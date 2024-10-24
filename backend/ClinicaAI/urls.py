@@ -1,22 +1,41 @@
-"""
-URL configuration for ClinicaAI project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('crm/', include('apps.crm.urls')),
+    path('vendas/', include('apps.vendas.urls')),
+    path('recrutamento/', include('apps.recrutamento.urls')),
+    path('recursos_humanos/', include('apps.recursos_humanos.urls')),
+    path('ecommerce/', include('apps.ecommerce.urls')),
+    path('compromissos/', include('apps.compromissos.urls')),
+    path('mensagens/', include('apps.mensagens.urls')),
+    path('servico_campo/', include('apps.servico_campo.urls')),
+    path('planilhas_horas/', include('apps.planilhas_horas.urls')),
+    path('projeto/', include('apps.projeto.urls')),
+    path('qualidade/', include('apps.qualidade.urls')),
+    path('compras/', include('apps.compras.urls')),
+    path('manutencao/', include('apps.manutencao.urls')),
+    path('forum/', include('apps.forum.urls')),
+    path('blog/', include('apps.blog.urls')),
+    path('elearning/', include('apps.elearning.urls')),
+    path('plm/', include('apps.plm.urls')),
+    path('fabricacao/', include('apps.fabricacao.urls')),
+    path('inventario/', include('apps.inventario.urls')),
+    path('chat_ao_vivo/', include('apps.chat_ao_vivo.urls')),
+    path('criador_sites/', include('apps.criador_sites.urls')),
+    path('locacao/', include('apps.locacao.urls')),
+    path('assinaturas/', include('apps.assinaturas.urls')),
+    path('assinar_documentos/', include('apps.assinar_documentos.urls')),
+    path('documentos/', include('apps.documentos.urls')),
+    path('planilhas/', include('apps.planilhas.urls')),
+    path('despesas/', include('apps.despesas.urls')),
+    path('faturamento/', include('apps.faturamento.urls')),
+    path('marketing_sms/', include('apps.marketing_sms.urls')),
+    path('marketing_email/', include('apps.marketing_email.urls')),
+    path('redes_sociais/', include('apps.redes_sociais.urls')),
+    path('frota/', include('apps.frota.urls')),
+    path('indicacoes/', include('apps.indicacoes.urls')),
+    path('avaliacoes/', include('apps.avaliacoes.urls')),
+    path('folgas/', include('apps.folgas.urls')),
 ]

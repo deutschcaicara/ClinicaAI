@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import RecrutamentoModel
 
-# Register your models here.
+@admin.register(RecrutamentoModel)
+class RecrutamentoAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'criado_em', 'atualizado_em')

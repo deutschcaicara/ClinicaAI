@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import ForumModel
+from .serializers import ForumSerializer
 
-# Create your views here.
+class ForumViewSet(viewsets.ModelViewSet):
+    queryset = ForumModel.objects.all()
+    serializer_class = ForumSerializer
