@@ -1,0 +1,46 @@
+version: '3.1'
+services:
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: diego
+      POSTGRES_PASSWORD: Mouse2250@#86
+      POSTGRES_DB: clinicaai
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:6
+    restart: always
+    ports:
+      - "6379:6379"
+  web:
+    image: python:3.9
+    working_dir: /code
+    volumes:
+      - ../backend:/code
+    command: bash -c "pip install -r requirements.txt && daphne -b 0.0.0.0 -p 8000 ClinicaAI.asgi:application"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+  worker:
+    image: python:3.9
+    working_dir: /code
+    volumes:
+      - ../backend:/code
+    command: bash -c "pip install -r requirements.txt && celery -A ClinicaAI worker --loglevel=info"
+    depends_on:
+      - db
+      - redis
+  frontend:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ../frontend/clinicaai-frontend:/app
+    command: npm start
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
