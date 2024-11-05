@@ -31,6 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'apps.exames',
+    'apps.atendimentos',
+    'apps.profissionais',
     'prometheus_client',
     'drf_yasg',
     'channels',

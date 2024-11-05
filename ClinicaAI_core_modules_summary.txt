@@ -1,0 +1,313 @@
+from rest_framework import viewsets
+from .models import IndicacoesModel
+from .serializers import IndicacoesSerializer
+
+class IndicacoesViewSet(viewsets.ModelViewSet):
+    queryset = IndicacoesModel.objects.all()
+    serializer_class = IndicacoesSerializer
+from django.db import models
+
+class IndicacoesModel(models.Model):
+    nome = models.CharField(max_length=255)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.nome
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import IndicacoesViewSet
+
+router = DefaultRouter()
+router.register(r'indicacoes', IndicacoesViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+from rest_framework import serializers
+from .models import IndicacoesModel
+
+class IndicacoesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IndicacoesModel
+        fields = '__all__'
+
+from rest_framework import viewsets
+from .models import Prontuario
+from .serializers import ProntuarioSerializer
+
+class ProntuarioViewSet(viewsets.ModelViewSet):
+    queryset = Prontuario.objects.all()
+    serializer_class = ProntuarioSerializer
+
+from django.db import models
+from apps.pacientes.models import Paciente
+
+class Prontuario(models.Model):
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='prontuarios')
+    data_registro = models.DateTimeField(auto_now_add=True)
+    descricao = models.TextField()
+    medico_responsavel = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Prontuário de {self.paciente.nome_completo} - {self.data_registro.strftime('%d/%m/%Y')}"
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ProntuarioViewSet
+
+router = DefaultRouter()
+router.register(r'prontuarios', ProntuarioViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
+from rest_framework import serializers
+from .models import Prontuario
+
+class ProntuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Prontuario
+        fields = '__all__'
+from rest_framework import viewsets
+from .models import FaturamentoModel
+from .serializers import FaturamentoSerializer
+
+class FaturamentoViewSet(viewsets.ModelViewSet):
+    queryset = FaturamentoModel.objects.all()
+    serializer_class = FaturamentoSerializer
+from django.db import models
+
+class FaturamentoModel(models.Model):
+    nome = models.CharField(max_length=255)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.nome
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import FaturamentoViewSet
+
+router = DefaultRouter()
+router.register(r'faturamento', FaturamentoViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+from rest_framework import serializers
+from .models import FaturamentoModel
+
+class FaturamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FaturamentoModel
+        fields = '__all__'
+
+from rest_framework import viewsets
+from .models import Paciente
+from .serializers import PacienteSerializer
+
+class PacienteViewSet(viewsets.ModelViewSet):
+    queryset = Paciente.objects.all()
+    serializer_class = PacienteSerializer
+
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+class Paciente(models.Model):
+    # Dados Pessoais
+    nome_completo = models.CharField(_("Nome Completo"), max_length=255)
+    cpf = models.CharField(_("CPF"), max_length=14, unique=True)
+    rg = models.CharField(_("RG"), max_length=20, blank=True)
+    data_nascimento = models.DateField(_("Data de Nascimento"))
+    sexo = models.CharField(
+        _("Sexo"),
+        max_length=1,
+        choices=[
+            ('M', 'Masculino'),
+            ('F', 'Feminino'),
+            ('O', 'Outro'),
+        ]
+    )
+    estado_civil = models.CharField(_("Estado Civil"), max_length=50, blank=True)
+    profissao = models.CharField(_("Profissão"), max_length=100, blank=True)
+    endereco = models.CharField(_("Endereço"), max_length=255)
+    numero = models.CharField(_("Número"), max_length=10)
+    complemento = models.CharField(_("Complemento"), max_length=100, blank=True)
+    bairro = models.CharField(_("Bairro"), max_length=100)
+    cidade = models.CharField(_("Cidade"), max_length=100)
+    estado = models.CharField(_("Estado"), max_length=2)
+    cep = models.CharField(_("CEP"), max_length=9)
+    telefone_fixo = models.CharField(_("Telefone Fixo"), max_length=15, blank=True)
+    telefone_celular = models.CharField(_("Telefone Celular"), max_length=15)
+    email = models.EmailField(_("Email"), blank=True)
+    convenio = models.CharField(_("Convênio"), max_length=100, blank=True)
+    numero_carteirinha = models.CharField(_("Número da Carteirinha"), max_length=50, blank=True)
+    validade_carteirinha = models.DateField(_("Validade da Carteirinha"), blank=True, null=True)
+    responsavel_financeiro = models.CharField(_("Responsável Financeiro"), max_length=255, blank=True)
+    parentesco_responsavel = models.CharField(_("Parentesco do Responsável"), max_length=50, blank=True)
+    cpf_responsavel = models.CharField(_("CPF do Responsável"), max_length=14, blank=True)
+    rg_responsavel = models.CharField(_("RG do Responsável"), max_length=20, blank=True)
+    telefone_responsavel = models.CharField(_("Telefone do Responsável"), max_length=15, blank=True)
+    consentimento_lgpd = models.BooleanField(_("Consentimento LGPD"), default=False)
+    data_consentimento = models.DateTimeField(_("Data do Consentimento"), blank=True, null=True)
+    observacoes = models.TextField(_("Observações"), blank=True)
+    foto = models.ImageField(_("Foto"), upload_to='fotos_pacientes', blank=True)
+    data_cadastro = models.DateTimeField(_("Data do Cadastro"), auto_now_add=True)
+    data_atualizacao = models.DateTimeField(_("Data da Última Atualização"), auto_now=True)
+
+    def __str__(self):
+        return self.nome_completo
+
+    class Meta:
+        verbose_name = _("Paciente")
+        verbose_name_plural = _("Pacientes")
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PacienteViewSet
+
+router = DefaultRouter()
+router.register(r'pacientes', PacienteViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
+from rest_framework import serializers
+from .models import Paciente
+
+class PacienteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Paciente
+        fields = '__all__'
+
+from rest_framework import viewsets
+from .models import Agendamento
+from .serializers import AgendamentoSerializer
+
+class AgendamentoViewSet(viewsets.ModelViewSet):
+    queryset = Agendamento.objects.all()
+    serializer_class = AgendamentoSerializer
+
+from django.db import models
+from apps.pacientes.models import Paciente
+
+class Agendamento(models.Model):
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='agendamentos')
+    data_horario = models.DateTimeField()
+    tipo_consulta = models.CharField(max_length=50)
+    status = models.CharField(max_length=20, choices=[
+        ('agendado', 'Agendado'),
+        ('cancelado', 'Cancelado'),
+        ('realizado', 'Realizado'),
+    ])
+    observacoes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Agendamento de {self.paciente.nome_completo} em {self.data_horario}"
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import AgendamentoViewSet
+
+router = DefaultRouter()
+router.register(r'agendamentos', AgendamentoViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
+from rest_framework import serializers
+from .models import Agendamento
+
+class AgendamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Agendamento
+        fields = '__all__'
+from django.shortcuts import render
+
+# Arquivo: /mnt/dados/clinicaai/pacientes/views.py
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Paciente
+from .serializers import PacienteSerializer
+from .utils import calcular_risco
+from .models.consulta import Consulta
+from .models.exame import Exame
+from .serializers import ConsultaSerializer, ExameSerializer
+
+class PacienteAPIView(APIView):
+    def post(self, request):
+        # Serializa os dados do paciente
+        serializer = PacienteSerializer(data=request.data)
+        if serializer.is_valid():
+            # Salva os dados do paciente
+            paciente = serializer.save()
+
+            # Calcula a análise de risco
+            risco = calcular_risco(paciente)
+
+            # Atualiza o campo de análise de risco do paciente
+            paciente.analise_risco = risco
+            paciente.save()
+
+            return Response(PacienteSerializer(paciente).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ConsultaAPIView(APIView):
+    def get(self, request):
+        consultas = Consulta.objects.all()
+        serializer = ConsultaSerializer(consultas, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ConsultaSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ExameAPIView(APIView):
+    def get(self, request):
+        exames = Exame.objects.all()
+        serializer = ExameSerializer(exames, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ExameSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)# Arquivo: /mnt/dados/clinicaai/pacientes/urls.py
+
+from django.urls import path
+from .views import ConsultaAPIView, ExameAPIView
+
+urlpatterns = [
+    path('consultas/', ConsultaAPIView.as_view(), name='consultas'),
+    path('exames/', ExameAPIView.as_view(), name='exames'),
+]
+# Arquivo: /mnt/dados/clinicaai/pacientes/serializers.py
+
+from rest_framework import serializers
+from .models.paciente import Paciente
+from .models.consulta import Consulta
+from .models.exame import Exame
+
+class PacienteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Paciente
+        fields = '__all__'
+
+class ConsultaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Consulta
+        fields = '__all__'
+
+class ExameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exame
+        fields = '__all__'
