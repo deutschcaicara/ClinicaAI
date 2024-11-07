@@ -1,7 +1,24 @@
-from rest_framework import serializers
-from .models import Profissionai
+# Módulo Profissionais - Serializers (serializers.py)
 
-class ProfissionaiSerializer(serializers.ModelSerializer):
+from rest_framework import serializers
+from .models import Especialidade, Profissional, Disponibilidade, RegistroHorasTrabalhadas
+
+class EspecialidadeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Profissionai
+        model = Especialidade
+        fields = '__all__'
+
+class ProfissionalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profissional
+        fields = '__all__'
+
+class DisponibilidadeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disponibilidade
+        fields = '__all__'
+
+class RegistroHorasTrabalhadasSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistroHorasTrabalhadas
         fields = '__all__'
