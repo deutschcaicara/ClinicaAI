@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import CrmViewSet
 
 router = DefaultRouter()
-router.register(r'crm', CrmViewSet)
+router.register(r"crm", CrmViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

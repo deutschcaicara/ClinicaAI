@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 
+
 class FabricacaoConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.fabricacao'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.fabricacao"

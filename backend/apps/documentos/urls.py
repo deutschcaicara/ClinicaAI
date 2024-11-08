@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import DocumentosViewSet
 
 router = DefaultRouter()
-router.register(r'documentos', DocumentosViewSet)
+router.register(r"documentos", DocumentosViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

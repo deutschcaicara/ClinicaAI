@@ -7,12 +7,16 @@ from rest_framework.decorators import action
 from .models import Documento, Assinatura
 from .serializers import DocumentoSerializer, AssinaturaSerializer
 from django.utils import timezone
-from notifications.services import NotificationService  # Serviço de notificação simulado
 import threading
 from django.core.exceptions import ValidationError
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def enviar_notificacao(titulo, mensagem, destinatarios):
+    # Função de envio de notificação (placeholder)
+    pass
 
 class DocumentoViewSet(viewsets.ModelViewSet):
     queryset = Documento.objects.all()
@@ -37,7 +41,10 @@ class DocumentoViewSet(viewsets.ModelViewSet):
 
             # Verificar se o documento está expirado antes de permitir a assinatura
             if documento.is_expired():
-                return Response({'detail': 'Não é possível assinar um documento expirado.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'detail': 'Não é possível assinar um documento expirado.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             dados_assinatura = {
                 'documento': documento.id,
@@ -60,7 +67,7 @@ class DocumentoViewSet(viewsets.ModelViewSet):
             documento.save()
 
             # Enviar notificação para o paciente ou partes interessadas
-            threading.Thread(target=NotificationService.send_notification, args=(
+            threading.Thread(target=enviar_notificacao, args=(
                 'Documento Assinado',
                 f'O documento "{documento.titulo}" foi assinado pelo profissional {profissional.nome_completo}.',
                 [documento.paciente.usuario.email] if documento.paciente else []
@@ -68,6 +75,7 @@ class DocumentoViewSet(viewsets.ModelViewSet):
 
             return Response({'detail': 'Documento assinado com sucesso.'}, status=status.HTTP_200_OK)
         return Response({'detail': 'Permissão negada.'}, status=status.HTTP_403_FORBIDDEN)
+
 
 class AssinaturaViewSet(viewsets.ModelViewSet):
     queryset = Assinatura.objects.all()

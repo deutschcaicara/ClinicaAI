@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import RecrutamentoViewSet
 
 router = DefaultRouter()
-router.register(r'recrutamento', RecrutamentoViewSet)
+router.register(r"recrutamento", RecrutamentoViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

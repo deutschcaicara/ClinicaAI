@@ -1,4 +1,3 @@
-
 from cryptography.fernet import Fernet
 from django.conf import settings
 from django.db import models
@@ -10,13 +9,16 @@ from django.utils import timezone
 # Aqui estamos simulando a recuperação da chave do arquivo de configurações
 cipher_suite = Fernet(settings.ENCRYPTION_KEY)
 
+
 class Paciente(models.Model):
     # Identificador Único Global
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     # Dados Pessoais
     nome_completo = models.CharField(_("Nome Completo"), max_length=255)
-    foto = models.ImageField(_("Foto"), upload_to='pacientes/fotos/', blank=True, null=True)
+    foto = models.ImageField(
+        _("Foto"), upload_to="pacientes/fotos/", blank=True, null=True
+    )
     cpf = models.CharField(_("CPF"), max_length=255, unique=True)
     rg = models.CharField(_("RG"), max_length=255, blank=True)
     data_nascimento = models.DateField(_("Data de Nascimento"))
@@ -24,10 +26,10 @@ class Paciente(models.Model):
         _("Sexo"),
         max_length=1,
         choices=[
-            ('M', 'Masculino'),
-            ('F', 'Feminino'),
-            ('O', 'Outro'),
-        ]
+            ("M", "Masculino"),
+            ("F", "Feminino"),
+            ("O", "Outro"),
+        ],
     )
     estado_civil = models.CharField(_("Estado Civil"), max_length=50, blank=True)
     profissao = models.CharField(_("Profissão"), max_length=100, blank=True)
@@ -40,11 +42,19 @@ class Paciente(models.Model):
     cidade = models.CharField(_("Cidade"), max_length=100)
     estado = models.CharField(_("Estado"), max_length=100)
     cep = models.CharField(_("CEP"), max_length=9, blank=True)
-    telefone_residencial = models.CharField(_("Telefone Residencial"), max_length=20, blank=True)
-    telefone_celular = models.CharField(_("Telefone Celular"), max_length=20, blank=True)
+    telefone_residencial = models.CharField(
+        _("Telefone Residencial"), max_length=20, blank=True
+    )
+    telefone_celular = models.CharField(
+        _("Telefone Celular"), max_length=20, blank=True
+    )
     email = models.EmailField(_("E-mail"), blank=True)
-    contato_emergencia = models.CharField(_("Contato de Emergência"), max_length=255, blank=True)
-    telefone_emergencia = models.CharField(_("Telefone de Emergência"), max_length=20, blank=True)
+    contato_emergencia = models.CharField(
+        _("Contato de Emergência"), max_length=255, blank=True
+    )
+    telefone_emergencia = models.CharField(
+        _("Telefone de Emergência"), max_length=20, blank=True
+    )
 
     # Dados Complementares
     nome_mae = models.CharField(_("Nome da Mãe"), max_length=255, blank=True)
@@ -53,14 +63,22 @@ class Paciente(models.Model):
     observacoes = models.TextField(_("Observações"), blank=True)
 
     # Relacionamentos
-    prontuario = models.OneToOneField('prontuarios.Prontuario', on_delete=models.SET_NULL, null=True, blank=True, related_name='paciente')
-    agendamentos = models.ManyToManyField('agendamentos.Agendamento', blank=True, related_name='pacientes')
+    prontuario = models.OneToOneField(
+    "prontuarios.Prontuario",
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name="paciente_prontuario",  
+)
+
+    
 
     # Auditoria
     created_at = models.DateTimeField(_("Data de Criação"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Última Atualização"), auto_now=True)
 
     class Meta:
+        app_label = "pacientes"
         verbose_name = _("Paciente")
         verbose_name_plural = _("Pacientes")
 

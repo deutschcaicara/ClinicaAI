@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import IndicacoesViewSet
 
 router = DefaultRouter()
-router.register(r'indicacoes', IndicacoesViewSet)
+router.register(r"indicacoes", IndicacoesViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

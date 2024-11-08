@@ -3,6 +3,7 @@ import concurrent.futures
 from django.core.management import call_command
 import django
 
+
 def criar_estrutura_modulo(modulo_nome, base_path):
     pasta_modulo = os.path.join(base_path, "apps", modulo_nome)
 
@@ -75,14 +76,45 @@ class {modulo_nome.capitalize()}Admin(admin.ModelAdmin):
     except Exception as e:
         print(f"Erro ao criar estrutura do módulo {modulo_nome}: {e}")
 
+
 def criar_estrutura_modulos(base_path):
     settings_path = os.path.join(base_path, "ClinicaAI", "settings.py")
     modulos = [
-        "crm", "vendas", "recrutamento", "recursos_humanos",
-        "ecommerce", "compromissos", "mensagens", "servico_campo", "planilhas_horas", "projeto", "qualidade",
-        "compras", "manutencao", "forum", "blog", "elearning", "plm", "fabricacao", "inventario", "chat_ao_vivo",
-        "criador_sites", "locacao", "assinaturas", "assinar_documentos", "documentos", "planilhas", "despesas",
-        "faturamento", "marketing_sms", "marketing_email", "redes_sociais", "frota", "indicacoes", "avaliacoes", "folgas"
+        "crm",
+        "vendas",
+        "recrutamento",
+        "recursos_humanos",
+        "ecommerce",
+        "compromissos",
+        "mensagens",
+        "servico_campo",
+        "planilhas_horas",
+        "projeto",
+        "qualidade",
+        "compras",
+        "manutencao",
+        "forum",
+        "blog",
+        "elearning",
+        "plm",
+        "fabricacao",
+        "inventario",
+        "chat_ao_vivo",
+        "criador_sites",
+        "locacao",
+        "assinaturas",
+        "assinar_documentos",
+        "documentos",
+        "planilhas",
+        "despesas",
+        "faturamento",
+        "marketing_sms",
+        "marketing_email",
+        "redes_sociais",
+        "frota",
+        "indicacoes",
+        "avaliacoes",
+        "folgas",
     ]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -95,16 +127,19 @@ def criar_estrutura_modulos(base_path):
         "from django.urls import path, include",
         "",
         "urlpatterns = [",
-        "    path('admin/', admin.site.urls),"
+        "    path('admin/', admin.site.urls),",
     ]
     for modulo_nome in modulos:
-        urls_principal_content.append(f"    path('{modulo_nome}/', include('apps.{modulo_nome}.urls')),")
+        urls_principal_content.append(
+            f"    path('{modulo_nome}/', include('apps.{modulo_nome}.urls')),"
+        )
     urls_principal_content.append("]")
     urls_principal_content = "\n".join(urls_principal_content)
     criar_arquivo(urls_principal_path, urls_principal_content)
 
     # Atualizar settings.py para incluir os módulos em INSTALLED_APPS
     atualizar_installed_apps(settings_path, modulos)
+
 
 def atualizar_installed_apps(settings_path, modulos):
     with open(settings_path, "r") as settings_file:
@@ -113,25 +148,33 @@ def atualizar_installed_apps(settings_path, modulos):
     installed_apps_start = settings_content.find("INSTALLED_APPS = [")
     if installed_apps_start != -1:
         installed_apps_end = settings_content.find("\n]", installed_apps_start) + 1
-        installed_apps_section = settings_content[installed_apps_start:installed_apps_end]
+        installed_apps_section = settings_content[
+            installed_apps_start:installed_apps_end
+        ]
         for modulo_nome in modulos:
             app_entry = f"    'apps.{modulo_nome}',"
             if app_entry not in installed_apps_section:
                 installed_apps_section += f"\n{app_entry}"
-        new_settings_content = settings_content[:installed_apps_start] + installed_apps_section + settings_content[installed_apps_end:]
+        new_settings_content = (
+            settings_content[:installed_apps_start]
+            + installed_apps_section
+            + settings_content[installed_apps_end:]
+        )
         criar_arquivo(settings_path, new_settings_content)
+
 
 def criar_arquivo(caminho, conteudo):
     with open(caminho, "w") as arquivo:
         arquivo.write(conteudo)
     print(f"Arquivo {caminho} criado com sucesso.")
 
+
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.abspath(__file__))
     criar_estrutura_modulos(base_path)
 
     # Configurar as configurações do Django antes de rodar os comandos de migração
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ClinicaAI.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ClinicaAI.settings")
     django.setup()
 
     # Após criar os arquivos, rodar as migrações para todos os módulos

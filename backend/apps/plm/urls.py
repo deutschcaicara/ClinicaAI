@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import PlmViewSet
 
 router = DefaultRouter()
-router.register(r'plm', PlmViewSet)
+router.register(r"plm", PlmViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

@@ -1005,7 +1005,7 @@ from rest_framework import viewsets
 from .models import AssinaturasModel
 from .serializers import AssinaturasSerializer
 
-class AssinaturasViewSet(viewsets.ModelViewSet):
+class AssinaturaViewSet(viewsets.ModelViewSet):
     queryset = AssinaturasModel.objects.all()
     serializer_class = AssinaturasSerializer
 from django.db import models
@@ -1042,10 +1042,10 @@ class Migration(migrations.Migration):
     ]
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AssinaturasViewSet
+from .views import AssinaturaViewSet
 
 router = DefaultRouter()
-router.register(r'assinaturas', AssinaturasViewSet)
+router.register(r'assinaturas', AssinaturaViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

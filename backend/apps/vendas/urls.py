@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import VendasViewSet
 
 router = DefaultRouter()
-router.register(r'vendas', VendasViewSet)
+router.register(r"vendas", VendasViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

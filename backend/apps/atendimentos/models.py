@@ -1,97 +1,147 @@
-# Módulo Atendimentos - Serializers (serializers.py)
-
-from rest_framework import serializers
+from django.db import models
 from django.utils import timezone
-from .models import Atendimento
-from agendamentos.models import Agendamento
-from financeiro.models import Transacao
-from documentos.models import DocumentoAssinado
-from notifications.services import NotificationService  # Serviço de notificação simulado
+from apps.pacientes.models import Paciente
+from apps.profissionais.models import Profissional
+from apps.agendamentos.models import Agendamento
+from apps.documentos.models import DocumentosModel
+from apps.financeiro.models import Transacao
+from apps.assinaturas.models import Assinatura
+from apps.prontuarios.models import ProcedimentoRealizado
 
-class AtendimentoSerializer(serializers.ModelSerializer):
+# Ajuste o caminho conforme a localização do modelo
+from apps.iot.models import DispositivoIoT
+
+
+class Atendimento(models.Model):
+    STATUS_CHOICES = [
+        ("Pendente", "Pendente"),
+        ("Em Andamento", "Em Andamento"),
+        ("Concluído", "Concluído"),
+        ("Cancelado", "Cancelado"),
+        ("Aguardando Documentação", "Aguardando Documentação"),
+        ("Aguardando Pagamento", "Aguardando Pagamento"),
+    ]
+
+    paciente = models.ForeignKey(
+        Paciente, on_delete=models.CASCADE, related_name="atendimentos"
+    )
+    profissional = models.ForeignKey(
+        Profissional, on_delete=models.CASCADE, related_name="atendimentos"
+    )
+    agendamento = models.OneToOneField(
+        Agendamento,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="atendimento",
+    )
+    procedimentos = models.ManyToManyField(
+        ProcedimentoRealizado, related_name="atendimentos", blank=True
+    )
+    dispositivos_iot = models.ManyToManyField(
+        DispositivoIoT, related_name="atendimentos", blank=True
+    )
+    # seguro_saude = models.ForeignKey(SeguroSaude, on_delete=models.SET_NULL, null=True, blank=True, related_name='atendimentos')
+    data_atendimento = models.DateField(default=timezone.now)
+    horario_inicio = models.TimeField()
+    horario_fim = models.TimeField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="Pendente")
+    diagnostico = models.TextField(null=True, blank=True)
+    prescricao = models.TextField(null=True, blank=True)
+    tratamento = models.TextField(null=True, blank=True)
+    assinatura_profissional = models.ForeignKey(
+        Assinatura,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assinaturas_profissionais",
+    )
+    autorizacao_paciente = models.ForeignKey(
+        Assinatura,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="autorizacoes_pacientes",
+    )
+    feedback_paciente = models.TextField(null=True, blank=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    transacao_financeira = models.OneToOneField(
+        Transacao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="atendimento",
+    )
+    recomendacoes_ia = models.TextField(null=True, blank=True)
+    recomendacoes_automaticas = models.TextField(null=True, blank=True)
+    avaliacao_risco = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    consentimento_paciente = models.BooleanField(default=False)
+    documentacao_completa = models.BooleanField(default=False)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
     class Meta:
-        model = Atendimento
-        fields = '__all__'
+        verbose_name = "Atendimento"
+        verbose_name_plural = "Atendimentos"
+        ordering = ["-data_atendimento", "-horario_inicio"]
 
-    def validate(self, data):
-        # Validação para garantir que a data e horário do atendimento sejam futuros, caso o atendimento ainda esteja pendente
-        if data['status'] == 'Pendente' and (data['data_atendimento'] < timezone.now().date() or (data['data_atendimento'] == timezone.now().date() and data['horario_inicio'] <= timezone.now().time())):
-            raise serializers.ValidationError("A data e o horário do atendimento pendente devem ser futuros.")
+    def __str__(self):
+        return f"Atendimento de {self.paciente.nome_completo} com {self.profissional.nome_completo} em {self.data_atendimento}"
 
-        # Garantir que a hora de fim do atendimento seja posterior à hora de início
-        if data['horario_fim'] <= data['horario_inicio']:
-            raise serializers.ValidationError("O horário de fim deve ser posterior ao horário de início.")
-
-        # Validação para garantir que o agendamento associado não tenha sido concluído antes do atendimento
-        agendamento = data.get('agendamento')
-        if agendamento and agendamento.status == 'Concluído':
-            raise serializers.ValidationError("O agendamento associado já foi concluído e não pode ser usado para um novo atendimento.")
-
-        # Garantir que a assinatura do profissional e a autorização do paciente estejam presentes ao concluir o atendimento
-        if data['status'] == 'Concluído':
-            if not data.get('assinatura_profissional'):
-                raise serializers.ValidationError("A assinatura do profissional é obrigatória para concluir o atendimento.")
-            if not data.get('autorizacao_paciente'):
-                raise serializers.ValidationError("A autorização do paciente é obrigatória para concluir o atendimento.")
-
-        # Garantir que diagnóstico e feedback estejam presentes ao concluir o atendimento
-        if data['status'] == 'Concluído':
-            if not data.get('diagnostico'):
-                raise serializers.ValidationError("O diagnóstico é obrigatório para concluir o atendimento.")
-            if not data.get('feedback_paciente'):
-                raise serializers.ValidationError("O feedback do paciente é obrigatório para concluir o atendimento.")
-
-        return data
-
-    def create(self, validated_data):
-        # Lógica adicional ao criar um atendimento, como atualizar o status do agendamento relacionado
-        agendamento = validated_data.get('agendamento')
-        if agendamento:
-            agendamento.status = 'Concluído'
-            agendamento.save()
-
-        # Enviar notificação para o paciente e profissional sobre a criação do atendimento
-        NotificationService.send_notification(
-            'Novo Atendimento Criado',
-            f'Um novo atendimento foi agendado para {validated_data.get("data_atendimento")} com o profissional {validated_data.get("profissional").nome_completo}.',
-            [validated_data.get('paciente').usuario.email, validated_data.get('profissional').usuario.email]
-        )
-
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        # Atualizar a transação financeira, se houver alteração no status do atendimento
-        if 'status' in validated_data and validated_data['status'] == 'Concluído' and not instance.transacao_financeira:
-            # Garantir que o valor do atendimento seja positivo
-            valor = validated_data.get('valor', 0)
-            if valor <= 0:
-                raise serializers.ValidationError("O valor do atendimento deve ser positivo para criar uma transação financeira.")
-
-            # Criar uma transação financeira relacionada
-            transacao = Transacao.objects.create(
-                paciente=instance.paciente,
-                valor=valor,
-                descricao=f'Pagamento pelo atendimento realizado em {instance.data_atendimento}',
-                status='Pendente'
-            )
-            instance.transacao_financeira = transacao
-
-        # Garantir que o status seja consistente com os campos obrigatórios
-        if validated_data.get('status') == 'Concluído':
-            if not instance.tratamento or not instance.prescricao:
-                raise serializers.ValidationError("O atendimento não pode ser concluído sem um tratamento e uma prescrição adequados.")
-
-        # Enviar notificação para o paciente e profissional sobre a conclusão do atendimento
-        if validated_data.get('status') == 'Concluído':
-            NotificationService.send_notification(
-                'Atendimento Concluído',
-                f'O atendimento de {instance.paciente.nome_completo} com o profissional {instance.profissional.nome_completo} foi concluído.',
-                [instance.paciente.usuario.email, instance.profissional.usuario.email]
+    def save(self, *args, **kwargs):
+        # Lógica adicional para integração com IoT, IA e outros serviços
+        if self.status == "Concluído" and not self.transacao_financeira:
+            # Cria uma transação financeira se o atendimento for concluído
+            self.transacao_financeira = Transacao.objects.create(
+                paciente=self.paciente,
+                valor=self.valor,
+                descricao=f"Pagamento pelo atendimento em {self.data_atendimento}",
+                status="Pendente",
             )
 
-        # Atualizar o status do agendamento para manter a consistência
-        if instance.agendamento:
-            instance.agendamento.status = 'Concluído'
-            instance.agendamento.save()
+        # Integração com IA e Machine Learning para análise do atendimento
+        # Exemplo: Enviar dados para serviço de IA para sugerir tratamentos ou
+        # analisar feedback
 
-        return super().update(instance, validated_data)
+        super().save(*args, **kwargs)
+
+    def finalizar_atendimento(self):
+        # Método para finalizar o atendimento e garantir todas as validações
+        # necessárias
+        if self.status == "Concluído":
+            if not self.assinatura_profissional or not self.autorizacao_paciente:
+                raise ValueError(
+                    "Assinatura do profissional e autorização do paciente são obrigatórias para concluir o atendimento."
+                )
+            if not self.diagnostico or not self.prescricao:
+                raise ValueError(
+                    "Diagnóstico e prescrição são obrigatórios para concluir o atendimento."
+                )
+
+        # Atualiza o status do agendamento associado
+        if self.agendamento:
+            self.agendamento.status = "Concluído"
+            self.agendamento.save()
+
+        # Enviar notificações para o paciente e profissional
+
+        self.save()
+
+
+class AuditoriaAtendimento(models.Model):
+    atendimento = models.ForeignKey(
+        Atendimento, on_delete=models.CASCADE, related_name="auditorias"
+    )
+    usuario = models.CharField(max_length=255)
+    alteracoes = models.TextField()
+    data_alteracao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auditoria de Atendimento"
+        verbose_name_plural = "Auditorias de Atendimentos"
+        ordering = ["-data_alteracao"]
+
+    def __str__(self):
+        return f"Auditoria do Atendimento {self.atendimento.id} por {self.usuario} em {self.data_alteracao}"

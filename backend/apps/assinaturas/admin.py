@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import AssinaturasModel
+from .models import Assinatura
 
-@admin.register(AssinaturasModel)
+
+@admin.register(Assinatura)
 class AssinaturasAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'criado_em', 'atualizado_em')
+    list_display = ("documento", "assinante", "data_assinatura", "validade_assinatura")

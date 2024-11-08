@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import ProjetoViewSet
 
 router = DefaultRouter()
-router.register(r'projeto', ProjetoViewSet)
+router.register(r"projeto", ProjetoViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

@@ -3,15 +3,18 @@ import subprocess
 
 BASE_DIR = "/mnt/dados/ClinicaAI/backend/apps/pacientes"
 
+
 def criar_pasta_se_necessario():
     if not os.path.exists(BASE_DIR):
         os.makedirs(BASE_DIR)
         print(f"Pasta {BASE_DIR} criada com sucesso.")
 
+
 def criar_models():
-    models_path = os.path.join(BASE_DIR, 'models.py')
-    with open(models_path, 'w') as f:
-        f.write("""
+    models_path = os.path.join(BASE_DIR, "models.py")
+    with open(models_path, "w") as f:
+        f.write(
+            """
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -63,13 +66,16 @@ class Paciente(models.Model):
     class Meta:
         verbose_name = _("Paciente")
         verbose_name_plural = _("Pacientes")
-""")
+"""
+        )
     print("Arquivo models.py criado com sucesso.")
 
+
 def criar_serializers():
-    serializers_path = os.path.join(BASE_DIR, 'serializers.py')
-    with open(serializers_path, 'w') as f:
-        f.write("""
+    serializers_path = os.path.join(BASE_DIR, "serializers.py")
+    with open(serializers_path, "w") as f:
+        f.write(
+            """
 from rest_framework import serializers
 from .models import Paciente
 
@@ -77,13 +83,16 @@ class PacienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Paciente
         fields = '__all__'
-""")
+"""
+        )
     print("Arquivo serializers.py criado com sucesso.")
 
+
 def criar_views():
-    views_path = os.path.join(BASE_DIR, 'views.py')
-    with open(views_path, 'w') as f:
-        f.write("""
+    views_path = os.path.join(BASE_DIR, "views.py")
+    with open(views_path, "w") as f:
+        f.write(
+            """
 from rest_framework import viewsets
 from .models import Paciente
 from .serializers import PacienteSerializer
@@ -91,13 +100,16 @@ from .serializers import PacienteSerializer
 class PacienteViewSet(viewsets.ModelViewSet):
     queryset = Paciente.objects.all()
     serializer_class = PacienteSerializer
-""")
+"""
+        )
     print("Arquivo views.py criado com sucesso.")
 
+
 def criar_urls():
-    urls_path = os.path.join(BASE_DIR, 'urls.py')
-    with open(urls_path, 'w') as f:
-        f.write("""
+    urls_path = os.path.join(BASE_DIR, "urls.py")
+    with open(urls_path, "w") as f:
+        f.write(
+            """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import PacienteViewSet
@@ -108,28 +120,36 @@ router.register(r'pacientes', PacienteViewSet)
 urlpatterns = [
     path('', include(router.urls)),
 ]
-""")
+"""
+        )
     print("Arquivo urls.py criado com sucesso.")
 
+
 def criar_admin():
-    admin_path = os.path.join(BASE_DIR, 'admin.py')
-    with open(admin_path, 'w') as f:
-        f.write("""
+    admin_path = os.path.join(BASE_DIR, "admin.py")
+    with open(admin_path, "w") as f:
+        f.write(
+            """
 from django.contrib import admin
 from .models import Paciente
 
 admin.site.register(Paciente)
-""")
+"""
+        )
     print("Arquivo admin.py criado com sucesso.")
+
 
 def rodar_migracoes():
     # Executar os comandos de makemigrations e migrate
     try:
-        subprocess.run(["python", "manage.py", "makemigrations", "pacientes"], check=True)
+        subprocess.run(
+            ["python", "manage.py", "makemigrations", "pacientes"], check=True
+        )
         subprocess.run(["python", "manage.py", "migrate"], check=True)
         print("Migrações criadas e aplicadas com sucesso.")
     except subprocess.CalledProcessError as e:
         print(f"Erro ao rodar migrações: {e}")
+
 
 if __name__ == "__main__":
     criar_pasta_se_necessario()

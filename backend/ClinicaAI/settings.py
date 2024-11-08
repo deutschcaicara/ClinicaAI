@@ -10,17 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+sys.path.append(str(BASE_DIR / "apps"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xp07(pa6ct^w3$k9-dqf0c-6r%)b(x!s)6(csocel=e5tm2s*3'
+SECRET_KEY = "django-insecure-xp07(pa6ct^w3$k9-dqf0c-6r%)b(x!s)6(csocel=e5tm2s*3"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -30,115 +31,120 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+
 INSTALLED_APPS = [
-    'apps.exames',
-    'apps.atendimentos',
-    'apps.profissionais',
-    'prometheus_client',
-    'drf_yasg',
-    'channels',
-    'corsheaders',
-    'rest_framework',
-    'apps.whatsapp',
-    'apps.conhecimento',
-    'apps.voip',
-    'apps.iot',
-    'apps.aprovacoes',
-    'apps.mensagens',
-    'apps.produtividade',
-    'apps.compromissos',
-    'apps.central_ajuda',
-    'apps.servico_campo',
-    'apps.planilhas_horas',
-    'apps.projeto',
-    'apps.pesquisas',
-    'apps.automacao_marketing',
-    'apps.eventos',
-    'apps.marketing_sms',
-    'apps.marketing_email',
-    'apps.redes_sociais',
-    'apps.frota',
-    'apps.indicacoes',
-    'apps.avaliacoes',
-    'apps.folgas',
-    'apps.recrutamento',
-    'apps.recursos_humanos',
-    'apps.qualidade',
-    'apps.manutencao',
-    'apps.compras',
-    'apps.prontuarios',
-    'apps.plm',
-    'apps.fabricacao',
-    'apps.inventario',
-    'apps.elearning',
-    'apps.chat_ao_vivo',
-    'apps.forum',
-    'apps.blog',
-    'apps.ecommerce',
-    'apps.criador_sites',
-    'apps.locacao',
-    'apps.assinaturas',
-    'apps.crm',
-    'apps.vendas',
-    'apps.assinar_documentos',
-    'apps.documentos',
-    'apps.planilhas',
-    'apps.despesas',
-    'apps.faturamento',
-    'apps.financeiro',
-    'apps.agendamentos',
-    'apps.pacientes',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    # Django core apps
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    'django_filters',
+    # Third-party apps
+    "prometheus_client",
+    "drf_yasg",
+    "channels",
+    "corsheaders",
+    "rest_framework",
+    # Project apps (ordered by dependencies)
+    "apps.profissionais",
+    "apps.pacientes",
+    "apps.prontuarios",
+    "apps.exames",
+    "apps.atendimentos",
+    "apps.agendamentos",
+    "apps.assinaturas",
+    "apps.assinar_documentos",
+    "apps.documentos",
+    "apps.financeiro",
+    "apps.faturamento",
+    "apps.crm",
+    "apps.vendas",
+    "apps.ecommerce",
+    "apps.blog",
+    "apps.marketing_sms",
+    "apps.marketing_email",
+    "apps.redes_sociais",
+    "apps.automacao_marketing",
+    "apps.conhecimento",
+    "apps.chat_ao_vivo",
+    "apps.mensagens",
+    "apps.whatsapp",
+    "apps.voip",
+    "apps.forum",
+    "apps.central_ajuda",
+    "apps.eventos",
+    "apps.indicacoes",
+    "apps.elearning",
+    "apps.projeto",
+    "apps.planilhas_horas",
+    "apps.produtividade",
+    "apps.compromissos",
+    "apps.servico_campo",
+    "apps.qualidade",
+    "apps.recursos_humanos",
+    "apps.recrutamento",
+    "apps.folgas",
+    "apps.avaliacoes",
+    "apps.plm",
+    "apps.fabricacao",
+    "apps.inventario",
+    "apps.locacao",
+    "apps.frota",
+    "apps.aprovacoes",
+    "apps.despesas",
+    "apps.compras",
+    "apps.manutencao",
+    "apps.planilhas",
+    "apps.criador_sites",
+    "apps.iot",
 ]
+
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'ClinicaAI.urls'
+ROOT_URLCONF = "ClinicaAI.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'ClinicaAI.wsgi.application'
-
+WSGI_APPLICATION = "ClinicaAI.wsgi.application"
+ENCRYPTION_KEY = "b-Q_0ri6gj0fA45I33ZBTM5OAA4yRijdXJdREVyKSZs="
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'clinicaai',
-        'USER': 'diego',
-        'PASSWORD': 'Mouse2250@#86',
-        'HOST': 'localhost',
-        'PORT': '5432'
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "clinicaai",
+        "USER": "diego",
+        "PASSWORD": "Mouse2250@#86",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -148,16 +154,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -165,9 +171,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -177,31 +183,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000'
-]
-ASGI_APPLICATION = 'ClinicaAI.asgi.application'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+ASGI_APPLICATION = "ClinicaAI.asgi.application"
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
