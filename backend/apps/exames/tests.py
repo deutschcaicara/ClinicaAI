@@ -5,13 +5,13 @@ from rest_framework import status
 from django.urls import reverse
 from .models import Exame
 from apps.pacientes.models import Paciente
-
 from apps.profissionais.models import Profissional
-import Profissional
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 import uuid
 from unittest.mock import patch
+
+User = get_user_model()
 
 User = get_user_model()
 
