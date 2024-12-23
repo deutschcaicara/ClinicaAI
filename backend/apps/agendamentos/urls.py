@@ -1,11 +1,12 @@
+# Módulo Agendamentos - URLs (urls.py)
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import AgendamentoViewSet
 
 router = DefaultRouter()
-router.register(r'agendamentos', AgendamentoViewSet)
+router.register(r"agendamentos", AgendamentoViewSet, basename="agendamento")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

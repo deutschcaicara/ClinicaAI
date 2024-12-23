@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Chat_ao_vivoModel
+from .serializers import Chat_ao_vivoSerializer
 
-# Create your views here.
+
+class Chat_ao_vivoViewSet(viewsets.ModelViewSet):
+    queryset = Chat_ao_vivoModel.objects.all()
+    serializer_class = Chat_ao_vivoSerializer

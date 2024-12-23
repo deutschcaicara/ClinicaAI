@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Recursos_humanosModel
+from .serializers import Recursos_humanosSerializer
 
-# Create your views here.
+
+class Recursos_humanosViewSet(viewsets.ModelViewSet):
+    queryset = Recursos_humanosModel.objects.all()
+    serializer_class = Recursos_humanosSerializer

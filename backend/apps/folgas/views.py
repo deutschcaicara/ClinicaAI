@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import FolgasModel
+from .serializers import FolgasSerializer
 
-# Create your views here.
+
+class FolgasViewSet(viewsets.ModelViewSet):
+    queryset = FolgasModel.objects.all()
+    serializer_class = FolgasSerializer

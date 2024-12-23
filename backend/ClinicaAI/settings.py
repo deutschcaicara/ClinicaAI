@@ -132,11 +132,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'clinicaai',
-        'USER': 'diego',
+        'USER': 'postgres',
         'PASSWORD': 'Mouse2250@#86',
         'HOST': 'localhost',
         'PORT': '5432'
-    }
+    },
+
 }
 
 
@@ -201,4 +202,5 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+
 }

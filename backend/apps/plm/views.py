@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import PlmModel
+from .serializers import PlmSerializer
 
-# Create your views here.
+
+class PlmViewSet(viewsets.ModelViewSet):
+    queryset = PlmModel.objects.all()
+    serializer_class = PlmSerializer

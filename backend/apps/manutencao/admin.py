@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import ManutencaoModel
 
-# Register your models here.
+
+@admin.register(ManutencaoModel)
+class ManutencaoAdmin(admin.ModelAdmin):
+    list_display = ("nome", "criado_em", "atualizado_em")

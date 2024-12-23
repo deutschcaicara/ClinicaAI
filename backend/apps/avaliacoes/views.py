@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import AvaliacoesModel
+from .serializers import AvaliacoesSerializer
 
-# Create your views here.
+
+class AvaliacoesViewSet(viewsets.ModelViewSet):
+    queryset = AvaliacoesModel.objects.all()
+    serializer_class = AvaliacoesSerializer

@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import FaturamentoModel
+from .serializers import FaturamentoSerializer
 
-# Create your views here.
+
+class FaturamentoViewSet(viewsets.ModelViewSet):
+    queryset = FaturamentoModel.objects.all()
+    serializer_class = FaturamentoSerializer
