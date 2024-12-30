@@ -174,12 +174,14 @@ class Prontuario(models.Model):
         related_name="prontuarios_atualizados",
     )
 
+    descricao = models.TextField()
+
     class Meta:
         verbose_name = _("Prontuário")
         verbose_name_plural = _("Prontuários")
 
     def __str__(self):
-        return f"Prontuário do paciente: {self.paciente.nome_completo}"
+        return self.descricao
 
 
 class HistoricoMedicamentos(models.Model):
@@ -349,3 +351,16 @@ class ProcedimentoRealizado(models.Model):
     class Meta:
         verbose_name = _("Procedimento Realizado")
         verbose_name_plural = _("Procedimentos Realizados")
+
+class Anamnese(models.Model):
+    paciente = models.ForeignKey('pacientes.Paciente', on_delete=models.CASCADE, related_name='anamneses')
+    profissional = models.ForeignKey('profissionais.Profissional', on_delete=models.CASCADE, related_name='anamneses')
+    texto = models.TextField(verbose_name=_("Anamnese"))
+    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name=_("Criado em"))
+
+    class Meta:
+        verbose_name = _("Anamnese")
+        verbose_name_plural = _("Anamneses")
+
+    def __str__(self):
+        return f"Anamnese de {self.paciente.nome_completo} - {self.data_criacao}"

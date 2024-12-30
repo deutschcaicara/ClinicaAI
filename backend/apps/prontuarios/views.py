@@ -1,9 +1,16 @@
 # Módulo Prontuários - Views (views.py)
 
 from . import views
+# Módulo Prontuários - Views (views.py)
+
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+
 from .models import (
     Prontuario,
     HistoricoMedicamentos,
@@ -11,6 +18,7 @@ from .models import (
     DadosVitais,
     HistoricoAcessosProntuario,
     ExameComplementar,
+    Anamnese,
 )
 from .serializers import (
     ProntuarioSerializer,
@@ -19,6 +27,7 @@ from .serializers import (
     DadosVitaisSerializer,
     HistoricoAcessosProntuarioSerializer,
     ExameComplementarSerializer,
+    AnamneseSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -28,7 +37,21 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 # Custom permission to restrict read/write access based on user roles
 
+class AnamneseViewSet(viewsets.ModelViewSet):
+    queryset = Anamnese.objects.all()
+    serializer_class = AnamneseSerializer
 
+    @action(detail=True, methods=['post'])
+    def sugerir_cid(self, request, pk=None):
+        anamnese = self.get_object()
+        texto = anamnese.texto
+
+        # Simular integração com IA (NLP para análise)
+        sugestoes = [
+            {"codigo": "J18.0", "descricao": "Pneumonia", "relevancia": 0.85},
+            {"codigo": "J20.9", "descricao": "Bronquite aguda", "relevancia": 0.75},
+        ]
+        return Response({"anamnese": texto, "sugestoes_cid": sugestoes}, status=status.HTTP_200_OK)
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
@@ -80,6 +103,13 @@ class ProntuarioViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        return Response(serializer.data)
+
+
+class ProntuarioList(APIView):
+    def get(self, request):
+        prontuarios = Prontuario.objects.all()
+        serializer = ProntuarioSerializer(prontuarios, many=True)
         return Response(serializer.data)
 
 
@@ -268,6 +298,7 @@ router.register(r"evolucoes_clinicas", views.EvolucaoClinicaViewSet)
 router.register(r"dados_vitais", views.DadosVitaisViewSet)
 router.register(r"historico_acessos", views.HistoricoAcessosProntuarioViewSet)
 router.register(r"exames_complementares", views.ExameComplementarViewSet)
+router.register(r'anamneses', AnamneseViewSet, basename='anamnese')
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -11,6 +11,22 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from cryptography.fernet import Fernet
+
+# Gere uma chave de criptografia
+ENCRYPTION_KEY = 'IpmmvITSPLun5m6lOtUPHszQ7yTKRlmAHQ9JC47XMKg='
+
+def decrypt(encrypted_text):
+    # Adicione padding se necessário
+    padding = len(encrypted_text) % 4
+    if padding != 0:
+        encrypted_text += '=' * (4 - padding)
+    try:
+        cipher_suite = Fernet(ENCRYPTION_KEY)
+        decrypted_text = cipher_suite.decrypt(encrypted_text.encode()).decode()
+        return decrypted_text
+    except Exception as e:
+        raise ValueError(f"Erro ao descriptografar o texto: {e}")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,8 +36,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xp07(pa6ct^w3$k9-dqf0c-6r%)b(x!s)6(csocel=e5tm2s*3'
-
+SECRET_KEY = decrypt('gAAAAABncfHWNo6zmHaKhNfNchedvGqjsJbCVDVWMZRmWKTKCAjCesVQrZOuImCOiZG33ls__sm-o74_5w4_DPPaeOtdWfIhAA==')  # Substituido
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -85,6 +100,7 @@ INSTALLED_APPS = [
     'apps.financeiro',
     'apps.agendamentos',
     'apps.pacientes',
+    'apps.profissionais',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -133,7 +149,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'clinicaai',
         'USER': 'postgres',
-        'PASSWORD': 'Mouse2250@#86',
+        'PASSWORD': decrypt('gAAAAABncfHWNo6zmHaKhNfNchedvGqjsJbCVDVWMZRmWKTKCAjCesVQrZOuImCOiZG33ls__sm-o74_5w4_DPPaeOtdWfIhAA=='),  # Substitua pelo texto criptografado gerado para a senha do banco de dados
         'HOST': 'localhost',
         'PORT': '5432'
     },

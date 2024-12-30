@@ -12,7 +12,8 @@ cipher_suite = Fernet(settings.ENCRYPTION_KEY)
 
 class Paciente(models.Model):
     # Identificador Único Global
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    uuid = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
+
 
     # Dados Pessoais
     nome_completo = models.CharField(_("Nome Completo"), max_length=255)
@@ -74,7 +75,8 @@ class Paciente(models.Model):
     
 
     # Auditoria
-    created_at = models.DateTimeField(_("Data de Criação"), auto_now_add=True)
+    created_at = models.DateTimeField(_("Data de Criação"), default=timezone.now)
+
     updated_at = models.DateTimeField(_("Última Atualização"), auto_now=True)
 
     class Meta:
