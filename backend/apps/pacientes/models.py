@@ -9,11 +9,9 @@ from django.utils import timezone
 # Aqui estamos simulando a recuperação da chave do arquivo de configurações
 cipher_suite = Fernet(settings.ENCRYPTION_KEY)
 
-
 class Paciente(models.Model):
     # Identificador Único Global
     uuid = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
-
 
     # Dados Pessoais
     nome_completo = models.CharField(_("Nome Completo"), max_length=255)
@@ -65,18 +63,15 @@ class Paciente(models.Model):
 
     # Relacionamentos
     prontuario = models.OneToOneField(
-    "prontuarios.Prontuario",
-    on_delete=models.SET_NULL,
-    null=True,
-    blank=True,
-    related_name="paciente_prontuario",  
-)
-
-    
+        "prontuarios.Prontuario",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="paciente_prontuario",
+    )
 
     # Auditoria
     created_at = models.DateTimeField(_("Data de Criação"), default=timezone.now)
-
     updated_at = models.DateTimeField(_("Última Atualização"), auto_now=True)
 
     class Meta:
@@ -98,11 +93,17 @@ class Paciente(models.Model):
     def decrypt_cpf(self):
         # Descriptografar o CPF para uso
         if self.cpf:
-            return cipher_suite.decrypt(self.cpf.encode()).decode()
+            try:
+                return cipher_suite.decrypt(self.cpf.encode()).decode()
+            except Exception as e:
+                return f"Erro ao descriptografar CPF: {e}"
         return None
 
     def decrypt_rg(self):
         # Descriptografar o RG para uso
         if self.rg:
-            return cipher_suite.decrypt(self.rg.encode()).decode()
+            try:
+                return cipher_suite.decrypt(self.rg.encode()).decode()
+            except Exception as e:
+                return f"Erro ao descriptografar RG: {e}"
         return None

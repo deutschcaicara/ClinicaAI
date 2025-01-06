@@ -76,7 +76,7 @@ class IsDoctorOrReadOnly(BasePermission):
 class ProntuarioViewSet(viewsets.ModelViewSet):
     queryset = Prontuario.objects.all()
     serializer_class = ProntuarioSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Exigir autenticação
 
     def create(self, request, *args, **kwargs):
         # Filtra campos sensíveis antes de criar

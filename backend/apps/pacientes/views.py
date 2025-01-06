@@ -5,19 +5,20 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Paciente
 from .serializers import PacienteSerializer
+import logging
 
+logger = logging.getLogger(__name__)
 
 class PacientePagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 100
 
-
 class PacienteViewSet(viewsets.ModelViewSet):
     queryset = Paciente.objects.all()
     serializer_class = PacienteSerializer
-    permission_classes = [permissions.IsAuthenticated]
     pagination_class = PacientePagination
+    
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -29,6 +30,13 @@ class PacienteViewSet(viewsets.ModelViewSet):
     ordering = ["nome_completo"]
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["list", "retrieve", "create", "update", "destroy"]:
             return [permissions.IsAuthenticated()]
-        return [permissions.IsAdminUser()]
+        return super().get_permissions()
+
+    def list(self, request, *args, **kwargs):
+        logger.debug("Listando pacientes")
+        response = super().list(request, *args, **kwargs)
+        logger.debug(f"Response data: {response.data}")
+        return response
+

@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from cryptography.fernet import Fernet
+from datetime import timedelta
+from celery.schedules import crontab
+import sys
 
 # Gere uma chave de criptografia
 ENCRYPTION_KEY = 'IpmmvITSPLun5m6lOtUPHszQ7yTKRlmAHQ9JC47XMKg='
@@ -51,6 +54,7 @@ INSTALLED_APPS = [
     'channels',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt',
     'apps.whatsapp',
     'apps.conhecimento',
     'apps.voip',
@@ -89,6 +93,7 @@ INSTALLED_APPS = [
     'apps.ecommerce',
     'apps.criador_sites',
     'apps.locacao',
+    'apps.clinica_core',
     'apps.assinaturas',
     'apps.crm',
     'apps.vendas',
@@ -101,12 +106,15 @@ INSTALLED_APPS = [
     'apps.agendamentos',
     'apps.pacientes',
     'apps.profissionais',
+    'apps.authentication',
+    'rest_framework_simplejwt.token_blacklist',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -179,13 +187,17 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
-USE_I18N = True
+USE_I18N = True  # Ativa suporte a traduções
+USE_L10N = True  # Formatação de números, datas e etc.
+USE_TZ = True    # Ativa suporte a fuso horário
 
-USE_TZ = True
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 
 # Static files (CSS, JavaScript, Images)
@@ -197,9 +209,43 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000'
-]
+
+# Configurações de CORS
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Ou permitir origens específicas
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+# ]
+
+# Configurações do Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',  # Exigir autenticação por padrão
+    ),
+'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+}
+
+# Configurações do Simple JWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=3),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+     'TOKEN_BLACKLIST_ENABLED': True, 
+}
+
 ASGI_APPLICATION = 'ClinicaAI.asgi.application'
 CHANNEL_LAYERS = {
     'default': {
@@ -211,12 +257,54 @@ CHANNEL_LAYERS = {
 }
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }
+CELERY_BEAT_SCHEDULE = {
+    'enviar-lembretes-vencimento': {
+        'task': 'apps.financeiro.tasks.enviar_lembretes_vencimento',
+        'schedule': crontab(minute=0, hour=8),  # Todos os dias às 8h
+    },
+    'enviar-alertas-atraso': {
+        'task': 'apps.financeiro.tasks.enviar_alertas_atraso',
+        'schedule': crontab(minute=0, hour=9),  # Todos os dias às 9h
+    },
+    'conciliar-transacoes': {
+        'task': 'apps.financeiro.tasks.conciliar_transacoes',
+        'schedule': crontab(minute=0, hour=23),  # Diariamente às 23h
+    },
+    'gerar-relatorio-financeiro': {
+        'task': 'apps.financeiro.tasks.gerar_relatorio_financeiro',
+        'schedule': crontab(minute=0, hour=6, day_of_month='1'),  # Todo primeiro dia do mês
+        'args': ['2025-01-01', '2025-01-31'],  # Substitua pelos períodos corretos
+    },
+}
+# Configurações específicas para testes
+if "pytest" in sys.modules:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',  # Banco de dados leve para testes
+            'NAME': ':memory:',  # Banco em memória
+        }
+    }
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

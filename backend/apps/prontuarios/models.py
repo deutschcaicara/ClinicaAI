@@ -174,14 +174,14 @@ class Prontuario(models.Model):
         related_name="prontuarios_atualizados",
     )
 
-    descricao = models.TextField()
+    prescricao = models.TextField()
 
     class Meta:
         verbose_name = _("Prontuário")
         verbose_name_plural = _("Prontuários")
 
     def __str__(self):
-        return self.descricao
+        return self.prescricao
 
 
 class HistoricoMedicamentos(models.Model):

@@ -1,0 +1,806 @@
+### C:\ClinicaAI\frontend\src\.babelrc ###
+{
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
+}
+
+
+### C:\ClinicaAI\frontend\src\App.css ###
+/* Estilos do App */
+
+### C:\ClinicaAI\frontend\src\App.jsx ###
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/login';
+import DashboardPage from './pages/dashboard';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import './styles/globals.scss';
+
+const App = () => {
+    return (
+        <Router>
+            <AuthProvider>
+                <Routes>
+                    {/* Redirecionar "/" para "/login" */}
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <DashboardPage />
+                            </ProtectedRoute>
+                        }
+                        
+                    />
+                </Routes>
+            </AuthProvider>
+        </Router>
+    );
+};
+
+export default App;
+
+
+### C:\ClinicaAI\frontend\src\faviicon2.png ###
+### C:\ClinicaAI\frontend\src\index.html ###
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClinicaAI</title>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+
+
+### C:\ClinicaAI\frontend\src\index.jsx ###
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App'; // O componente principal da aplicação
+import './styles/globals.scss'; // Importar estilos globais, se aplicável'
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
+);
+
+
+### C:\ClinicaAI\frontend\src\components\ProtectedRoute.jsx ###
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '@context/AuthContext';
+
+// Componente para proteger rotas
+const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated } = useContext(AuthContext); // Verifica autenticação
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />; // Redireciona para login se não autenticado
+    }
+
+    return children; // Renderiza a rota protegida
+};
+
+export default ProtectedRoute;
+
+
+### C:\ClinicaAI\frontend\src\components\dashboard\CardsContainer.jsx ###
+import React from 'react';
+import './cardsContainer.scss';
+
+function CardsContainer({ cards }) {
+  return (
+    <section className="cards-container">
+      {cards.map((card, index) => (
+        <div className="card" key={index}>
+          <h3>{card.title}</h3>
+          <p>{card.value}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+export default CardsContainer;
+
+
+### C:\ClinicaAI\frontend\src\components\dashboard\cardsContainer.scss ###
+.cards-container {
+    display: flex;
+    gap: 20px;
+  
+    .card {
+      flex: 1;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      text-align: center;
+  
+      h3 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+      }
+  
+      p {
+        font-size: 1rem;
+        font-weight: bold;
+      }
+    }
+  }
+  
+
+### C:\ClinicaAI\frontend\src\components\dashboard\DashboardHeader.jsx ###
+import React from 'react';
+import './dashboardHeader.scss';
+
+function DashboardHeader({ title }) {
+  return (
+    <header className="dashboard-header">
+      <h1>{title}</h1>
+    </header>
+  );
+}
+
+export default DashboardHeader;
+
+
+### C:\ClinicaAI\frontend\src\components\dashboard\dashboardHeader.scss ###
+.dashboard-header {
+    margin-bottom: 20px;
+  
+    h1 {
+      font-size: 1.5rem;
+      color: #4caf50; /* Exemplo de cor, pode ajustar */
+    }
+  }
+  
+
+### C:\ClinicaAI\frontend\src\context\AuthContext.jsx ###
+import React, { createContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const navigate = useNavigate();
+
+    // Inicializa o estado de autenticação ao carregar a página
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken'); // Ajustado para "accessToken"
+        if (token) {
+            api.defaults.headers['Authorization'] = `Bearer ${token}`;
+            setIsAuthenticated(true);
+        } else {
+            setIsAuthenticated(false);
+        }
+    }, []);
+
+    // Função de login
+    const login = async (credentials) => {
+        try {
+            const { access, refresh } = await api.post('/token/', credentials).then(res => res.data);
+            localStorage.setItem('accessToken', access); // Alinha com "accessToken"
+            localStorage.setItem('refreshToken', refresh);
+            api.defaults.headers['Authorization'] = `Bearer ${access}`;
+            setIsAuthenticated(true);
+            setUser({ username: credentials.username }); // Atualiza o usuário logado
+            navigate('/dashboard'); // Redireciona para o dashboard
+        } catch (error) {
+            console.error('Erro ao fazer login:', error);
+            throw error.response?.data?.detail || 'Erro inesperado ao fazer login';
+        }
+    };
+
+    // Função de logout
+    const logout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        api.defaults.headers['Authorization'] = null;
+        setIsAuthenticated(false);
+        setUser(null);
+        navigate('/login');
+    };
+
+    const contextValue = {
+        user,
+        isAuthenticated,
+        login,
+        logout,
+    };
+
+    return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+};
+
+
+### C:\ClinicaAI\frontend\src\layouts\Footer.jsx ###
+
+
+### C:\ClinicaAI\frontend\src\layouts\Header.jsx ###
+
+
+### C:\ClinicaAI\frontend\src\layouts\MainLayout.jsx ###
+
+
+### C:\ClinicaAI\frontend\src\pages\agendamentos\index.jsx ###
+
+
+### C:\ClinicaAI\frontend\src\pages\agendamentos\styles.css ###
+
+
+### C:\ClinicaAI\frontend\src\pages\dashboard\dashboard.scss ###
+@use '../../styles/itcss/settings' as settings;
+@use 'sass:math'; // Import necessário para math.div()
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+
+  .sidebar {
+    background-color: settings.$secondary-color;
+    color: #fff;
+    width: 250px;
+    padding: settings.$spacing-unit * 2;
+
+    h2 {
+      margin-bottom: settings.$spacing-unit;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        margin: settings.$spacing-unit 0;
+
+        a {
+          color: #fff;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+
+  .main-content {
+    flex: 1;
+    padding: settings.$spacing-unit * 2;
+
+    header {
+      margin-bottom: settings.$spacing-unit * 2;
+
+      h1 {
+        color: settings.$primary-color;
+        font-size: 1.5rem;
+      }
+    }
+
+    .cards-container {
+      display: flex;
+      gap: settings.$spacing-unit;
+      margin-bottom: settings.$spacing-unit * 2;
+
+      .card {
+        flex: 1;
+        background: #fff;
+        border-radius: settings.$border-radius;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: settings.$spacing-unit;
+        text-align: center;
+        font-weight: bold;
+      }
+    }
+
+    .table-section {
+      background: #fff;
+      border-radius: settings.$border-radius;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: settings.$spacing-unit;
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+          border: 1px solid #ddd;
+          padding: settings.$spacing-unit;
+          text-align: left;
+        }
+
+        th {
+          background-color: settings.$primary-color;
+          color: #fff;
+        }
+
+        tr:nth-child(even) {
+          background-color: settings.$background-color;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+
+    .sidebar {
+      width: 100%;
+      text-align: center;
+
+      ul {
+        display: flex;
+        justify-content: space-around;
+
+        li {
+          margin: 0;
+        }
+      }
+    }
+
+    .main-content {
+      .cards-container {
+        flex-direction: column;
+      }
+
+      .table-section {
+        table {
+          font-size: 0.9rem;
+
+          th,
+          td {
+            padding: math.div(settings.$spacing-unit, 2); // Corrigido para math.div()
+          }
+        }
+      }
+    }
+  }
+}
+
+
+### C:\ClinicaAI\frontend\src\pages\dashboard\index.jsx ###
+/* import React, { useContext, useState, useEffect } from 'react';
+import { AuthContext } from '@context/AuthContext';
+import DashboardHeader from '@dashboard/DashboardHeader';
+import CardsContainer from '@components/dashboard/CardsContainer';
+import api from '../../services/api';
+import './dashboard.scss';
+
+function Dashboard() {
+  const { logout } = useContext(AuthContext); // Adicionar função de logout
+  const [cardsData, setCardsData] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await api.get('/dashboard/');
+        setCardsData(response.data);
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error);
+        setErrorMessage('Não foi possível carregar os dados do dashboard.');
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (errorMessage) {
+    return <div className="error-message">{errorMessage}</div>;
+  }
+
+  return (
+    <div className="dashboard">
+      <aside className="sidebar">
+        <h2>Menu</h2>
+        <ul>
+          <li><a href="#">Pacientes</a></li>
+          <li><a href="#">Exames</a></li>
+          <li><a href="#">Histórico</a></li>
+          <li><a href="#">Configurações</a></li>
+          <li><button onClick={logout}>Logout</button></li> {/* Botão de logout }
+        </ul>
+      </aside>
+
+      <main className="main-content">
+        <DashboardHeader title="Dashboard Clínico" />
+        <CardsContainer cards={cardsData} />
+      </main>
+    </div>
+  );
+}
+
+export default Dashboard;
+ 
+*/
+
+import React, { useContext } from 'react';
+import { AuthContext } from '@context/AuthContext';
+import './dashboard.scss';
+
+const Dashboard = () => {
+    const { logout, user } = useContext(AuthContext);
+
+    return (
+        <div className="dashboard">
+            <aside className="sidebar">
+                <h2>Bem-vindo, {user?.username}</h2>
+                <ul>
+                    <li><a href="#">Pacientes</a></li>
+                    <li><a href="#">Exames</a></li>
+                    <li><a href="#">Histórico</a></li>
+                    <li><a href="#">Configurações</a></li>
+                    <li><button onClick={logout}>Logout</button></li>
+                </ul>
+            </aside>
+            <main className="main-content">
+                <h1>Dashboard</h1>
+                <p>Este é o dashboard clínico.</p>
+            </main>
+        </div>
+    );
+};
+
+export default Dashboard;
+
+
+### C:\ClinicaAI\frontend\src\pages\login\index.jsx ###
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '@context/AuthContext';
+import './login.scss';
+
+const LoginPage = () => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const { login } = useContext(AuthContext);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await login({ username, password }); // Faz login pelo contexto
+        } catch (error) {
+            setErrorMessage('Erro ao fazer login. Verifique suas credenciais.');
+        }
+    };
+
+    return (
+        <div className="login-page">
+            <h1>Login</h1>
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    placeholder="Usuário"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                />
+                <input
+                    type="password"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                />
+                <button type="submit">Entrar</button>
+            </form>
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
+        </div>
+    );
+};
+
+export default LoginPage;
+
+
+### C:\ClinicaAI\frontend\src\pages\login\login.scss ###
+@use 'sass:color';
+@use '../../styles/itcss/settings' as settings;
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: settings.$background-color;
+  
+    .login-form {
+      background: #e9e3e3;
+      padding: settings.$spacing-unit * 4;
+      border-radius: settings.$border-radius;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+  
+      h1 {
+        margin-bottom: settings.$spacing-unit * 2;
+        color: settings.$primary-color;
+        text-align: center;
+      }
+  
+      input {
+        width: 100%;
+        padding: settings.$spacing-unit;
+        margin-bottom: settings.$spacing-unit * 2;
+        border: 1px solid #ccc;
+        border-radius: settings.$border-radius;
+  
+        &:focus {
+          border-color: settings.$primary-color;
+          outline: none;
+        }
+      }
+  
+      button {
+        width: 100%;
+        padding: settings.$spacing-unit;
+        background-color: settings.$primary-color;
+        color: #fff;
+        border: none;
+        border-radius: settings.$border-radius;
+        cursor: pointer;
+  
+        &:hover {
+            background-color: color.scale(settings.$primary-color, $lightness: -10%);
+        }
+      }
+    }
+  }
+  
+
+### C:\ClinicaAI\frontend\src\pages\pacientes\index.jsx ###
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import './pacientes.scss';
+
+function Patients() {
+  const [patients, setPatients] = useState([]);
+
+  useEffect(() => {
+    async function fetchPatients() {
+      try {
+        const response = await api.get('/pacientes/');
+        setPatients(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar pacientes:', error);
+      }
+    }
+    fetchPatients();
+  }, []);
+
+  return (
+    <div className="patients">
+      <h1>Lista de Pacientes</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Idade</th>
+            <th>CPF</th>
+          </tr>
+        </thead>
+        <tbody>
+          {patients.map((patient) => (
+            <tr key={patient.uuid}>
+              <td>{patient.nome_completo}</td>
+              <td>{new Date().getFullYear() - new Date(patient.data_nascimento).getFullYear()}</td>
+              <td>{patient.cpf}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default Patients;
+
+
+### C:\ClinicaAI\frontend\src\pages\pacientes\pacientes.scss ###
+@use '../../styles/itcss/settings' as settings;
+@use 'sass:color';
+
+.patients {
+  padding: settings.$spacing-unit * 2;
+
+  h1 {
+    margin-bottom: settings.$spacing-unit * 2;
+    font-size: 1.5rem;
+    color: settings.$primary-color;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: settings.$spacing-unit;
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: settings.$spacing-unit;
+      text-align: left;
+    }
+
+    th {
+      background-color: settings.$primary-color;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: settings.$background-color;
+    }
+
+    tr:hover {
+      background-color: color.adjust(settings.$primary-color, $lightness: 40%);
+    }
+
+    td {
+      font-size: 0.9rem;
+      color: settings.$text-color;
+    }
+  }
+
+  // Estilização de mensagens de erro e carregamento
+  .loading {
+    text-align: center;
+    font-size: 1rem;
+    color: settings.$secondary-color;
+  }
+
+  .error {
+    text-align: center;
+    color: red;
+    font-weight: bold;
+  }
+}
+
+
+### C:\ClinicaAI\frontend\src\services\api.js ###
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: 'http://localhost:8000/api/auth',
+    timeout: 5000,
+});
+
+// Interceptor para adicionar o token ao cabeçalho
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Função para renovar o token
+export const refreshToken = async () => {
+    const refresh = localStorage.getItem('refreshToken');
+    if (!refresh) throw new Error('Token de refresh não encontrado');
+
+    try {
+        const { data } = await api.post('/token/refresh/', { refresh });
+        localStorage.setItem('accessToken', data.access); // Atualiza o token de acesso
+        return data.access;
+    } catch (error) {
+        console.error('Erro ao renovar o token:', error);
+        throw error;
+    }
+};
+
+// Interceptor para renovar o token automaticamente
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            try {
+                const newToken = await refreshToken();
+                api.defaults.headers['Authorization'] = `Bearer ${newToken}`;
+                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                return api(originalRequest);
+            } catch (err) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+                return Promise.reject(err);
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default api;
+
+
+### C:\ClinicaAI\frontend\src\styles\globals.scss ###
+@use './itcss/settings' as settings;
+@use './itcss/tools' as tools;
+@use './itcss/components' as components;
+
+
+### C:\ClinicaAI\frontend\src\styles\itcss\_components.scss ###
+@use 'sass:color';
+@use 'sass:map';
+@use './settings' as settings; 
+@use './tools' as tools;
+
+body {
+  font-family: settings.$font-family;
+  margin: 0;
+  padding: 0;
+  color: settings.$text-color;
+  background-color: #f9f9f9;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 settings.$spacing-unit 0;
+  color: settings.$primary-color;
+}
+
+button {
+  background-color: settings.$primary-color;
+  color: #fff;
+  border: none;
+  padding: settings.$spacing-unit * 2 settings.$spacing-unit * 4;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: color.adjust(settings.$primary-color, $lightness: -15%);
+  }
+
+  &:active {
+    background-color: color.adjust(settings.$primary-color, $lightness: -20%);
+  }
+}
+
+
+
+### C:\ClinicaAI\frontend\src\styles\itcss\_settings.scss ###
+/* Configurações globais */
+@use 'sass:map';
+// Paleta de cores
+$primary-color: #4caf50;
+$secondary-color: #ff9800;
+$background-color: #f9f9f9;
+$text-color: #333;
+$heading-color: #222;
+
+// Tipografia
+$font-family: 'Roboto', sans-serif;
+$font-size-base: 16px;
+
+// Espaçamento
+$spacing-unit: 8px;
+$border-radius: 5px;
+
+### C:\ClinicaAI\frontend\src\styles\itcss\_tools.scss ###
+/* Ferramentas utilitárias */
+
+### C:\ClinicaAI\frontend\src\utils\constants.js ###
+// Constantes globais
+
+### C:\ClinicaAI\frontend\src\utils\helpers.js ###
+// Funções auxiliares
+

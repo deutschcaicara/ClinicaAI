@@ -1,6 +1,6 @@
 # Módulo Profissionais - Views (views.py)
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from apps.profissionais.models import (
     Especialidade,
     Profissional,
@@ -13,7 +13,7 @@ from .serializers import (
     DisponibilidadeSerializer,
     RegistroHorasTrabalhadasSerializer,
 )
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.permissions import IsAuthenticated, BasePermission, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
@@ -88,3 +88,15 @@ class RegistroHorasTrabalhadasViewSet(viewsets.ModelViewSet):
             {"detail": "Usuário não é um profissional."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class ProfissionalList(generics.ListCreateAPIView):
+    queryset = Profissional.objects.all()
+    serializer_class = ProfissionalSerializer
+    permission_classes = [IsAuthenticated]  # Exigir autenticação
+
+
+class ProfissionalDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Profissional.objects.all()
+    serializer_class = ProfissionalSerializer
+    permission_classes = [IsAuthenticated]  # Exigir autenticação

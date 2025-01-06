@@ -1,0 +1,1389 @@
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+from apps.profissionais.models import Profissional
+
+from apps.pacientes.models import Paciente
+
+import uuid
+
+
+class Agendamento(models.Model):
+    # Identificador Único Global
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    paciente = models.ForeignKey(
+    'pacientes.Paciente', on_delete=models.CASCADE, related_name='agendamentos'
+)
+
+
+
+
+    profissional = models.ForeignKey(
+        Profissional, on_delete=models.CASCADE, related_name="agendamentos_profissional"
+    )
+
+    # Dados do Agendamento
+    data_agendamento = models.DateField(verbose_name=_("Data do Agendamento"))
+    horario_inicio = models.TimeField(verbose_name=_("Horário de Início"))
+    horario_fim = models.TimeField(verbose_name=_("Horário de Fim"))
+    tipo_consulta = models.CharField(
+        max_length=50,
+        choices=[
+            ("Consulta Inicial", "Consulta Inicial"),
+            ("Retorno", "Retorno"),
+            ("Exame", "Exame"),
+            ("Teleconsulta", "Teleconsulta"),
+        ],
+        default="Consulta Inicial",
+        verbose_name=_("Tipo de Consulta"),
+    )
+    local_atendimento = models.CharField(
+        max_length=50,
+        choices=[
+            ("Presencial", "Presencial"),
+            ("Telemedicina", "Telemedicina"),
+            ("Visita Domiciliar", "Visita Domiciliar"),
+        ],
+        default="Presencial",
+        verbose_name=_("Local do Atendimento"),
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("Agendado", "Agendado"),
+            ("Cancelado", "Cancelado"),
+            ("Concluído", "Concluído"),
+        ],
+        default="Agendado",
+        verbose_name=_("Status do Agendamento"),
+    )
+    motivo_cancelamento = models.TextField(
+        blank=True, null=True, verbose_name=_("Motivo do Cancelamento")
+    )
+    confirmado_pelo_paciente = models.BooleanField(
+        default=False, verbose_name=_("Confirmado pelo Paciente")
+    )
+    observacoes = models.TextField(blank=True, verbose_name=_("Observações"))
+    sintomas_iniciais = models.TextField(
+        blank=True, verbose_name=_("Sintomas Iniciais")
+    )
+    tipo_atendimento = models.CharField(
+        max_length=20,
+        choices=[("Emergencial", "Emergencial"), ("Rotina", "Rotina")],
+        default="Rotina",
+        verbose_name=_("Tipo de Atendimento"),
+    )
+    motivo_consulta = models.CharField(
+        max_length=255, blank=True, verbose_name=_("Motivo da Consulta")
+    )
+
+    # Dados Financeiros
+    meio_pagamento = models.CharField(
+        max_length=50,
+        choices=[
+            ("Cartão de Crédito", "Cartão de Crédito"),
+            ("Convênio", "Convênio"),
+            ("Dinheiro", "Dinheiro"),
+            ("PIX", "PIX"),
+        ],
+        blank=True,
+        verbose_name=_("Meio de Pagamento"),
+    )
+    status_financeiro = models.CharField(
+        max_length=20,
+        choices=[("Pago", "Pago"), ("Pendente", "Pendente")],
+        default="Pendente",
+        verbose_name=_("Status Financeiro"),
+    )
+
+    # Notificações e Lembretes
+    canal_preferencial = models.CharField(
+        max_length=20,
+        choices=[("WhatsApp", "WhatsApp"), ("SMS", "SMS"), ("Email", "Email")],
+        default="WhatsApp",
+        verbose_name=_("Canal Preferencial de Notificação"),
+    )
+    lembrete_enviado_em = models.DateTimeField(
+        blank=True, null=True, verbose_name=_("Lembrete Enviado em")
+    )
+    status_notificacao = models.CharField(
+        max_length=20,
+        choices=[("Enviado", "Enviado"), ("Lido", "Lido"), ("Pendente", "Pendente")],
+        default="Pendente",
+        verbose_name=_("Status da Notificação"),
+    )
+
+    # Automação e Integração IoT
+    equipamentos_necessarios = models.CharField(
+        max_length=255, blank=True, verbose_name=_("Equipamentos Necessários")
+    )
+    sala_atendimento = models.CharField(
+        max_length=50, blank=True, verbose_name=_("Sala de Atendimento")
+    )
+    dispositivo_iot = models.CharField(
+        max_length=100, blank=True, verbose_name=_("Dispositivo IoT Necessário")
+    )
+
+    # Dados para IA e Machine Learning
+    probabilidade_cancelamento = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_("Probabilidade de Cancelamento (%)"),
+    )
+    tempo_espera_estimado = models.DurationField(
+        blank=True, null=True, verbose_name=_("Tempo de Espera Estimado")
+    )
+    preferencias_paciente = models.CharField(
+        max_length=255, blank=True, verbose_name=_("Preferências do Paciente")
+    )
+    confirmar_atendimento_automatico = models.BooleanField(
+        default=False, verbose_name=_("Confirmar Atendimento Automaticamente")
+    )
+
+    # Histórico de Modificações
+    log_modificacoes = models.TextField(
+        blank=True, verbose_name=_("Histórico de Modificações")
+    )
+    historico_cancelamentos = models.TextField(
+        blank=True, verbose_name=_("Histórico de Cancelamentos")
+    )
+
+    # Pré-Check-in
+    pre_checkin_realizado = models.BooleanField(
+        default=False, verbose_name=_("Pré-Check-in Realizado")
+    )
+
+    # Dados de Controle
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name=_("Criado em"))
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name=_("Atualizado em"))
+
+    class Meta:
+        verbose_name = _("Agendamento")
+        verbose_name_plural = _("Agendamentos")
+        app_label = "agendamentos"
+        unique_together = (("profissional", "data_agendamento", "horario_inicio"),)
+
+    def __str__(self):
+        return f"Agendamento de {self.paciente.nome_completo} com {self.profissional.nome_completo} em {self.data_agendamento} às {self.horario_inicio}"
+from django.db import models
+from django.utils import timezone
+import uuid
+from apps.pacientes.models import Paciente
+
+from apps.profissionais.models import Profissional
+from django.core.validators import FileExtensionValidator
+from django.conf import settings
+import hashlib
+from datetime import timedelta
+
+
+class Documento(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    titulo = models.CharField(max_length=255, verbose_name="Título do Documento")
+    descricao = models.TextField(
+        verbose_name="Descrição do Documento", blank=True, null=True
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+    autor = models.ForeignKey(
+        Profissional,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="documentos_criados",
+    )
+    paciente = models.ForeignKey(
+        Paciente,
+        on_delete=models.CASCADE,
+        related_name="documentos",
+        blank=True,
+        null=True,
+    )
+    arquivo = models.FileField(
+        upload_to="documentos/",
+        verbose_name="Arquivo do Documento",
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=[("Pendente", "Pendente"), ("Assinado", "Assinado")],
+        default="Pendente",
+    )
+    data_expiracao = models.DateField(
+        blank=True, null=True, verbose_name="Data de Expiração do Documento"
+    )
+    hash_documento = models.CharField(
+        max_length=256, verbose_name="Hash do Documento", blank=True, null=True
+    )
+    consentimento_informado = models.BooleanField(
+        default=False, verbose_name="Consentimento Informado"
+    )
+    exigencias_legais = models.TextField(
+        verbose_name="Exigências Legais", blank=True, null=True
+    )
+    versao = models.IntegerField(default=1, verbose_name="Versão do Documento")
+    compliance_regulamentar = models.TextField(
+        verbose_name="Conformidade Regulamentar", blank=True, null=True
+    )
+    associado_prontuario = models.BooleanField(
+        default=False, verbose_name="Associado ao Prontuário"
+    )
+    analise_automatizada = models.TextField(
+        verbose_name="Análise Automatizada de Risco", blank=True, null=True
+    )
+
+    class Meta:
+        ordering = ["-data_criacao"]
+        verbose_name = "Documento"
+        verbose_name_plural = "Documentos"
+
+    def __str__(self):
+        return f"{self.titulo} - {self.get_status_display()}"
+
+    def is_expired(self):
+        # Verifica se o documento está expirado
+        if self.data_expiracao:
+            return timezone.now().date() > self.data_expiracao
+        return False
+
+    def gerar_hash_documento(self):
+        # Gera o hash do documento para garantir integridade
+        if self.arquivo:
+            hasher = hashlib.sha256()
+            with self.arquivo.open("rb") as f:
+                buf = f.read()
+                hasher.update(buf)
+            self.hash_documento = hasher.hexdigest()
+            self.save()
+
+    def definir_expiracao_padrao(self):
+        # Define uma data de expiração padrão para o documento se não estiver
+        # definida
+        if not self.data_expiracao:
+            self.data_expiracao = timezone.now().date() + timedelta(days=365)
+            self.save()
+
+
+class Assinatura(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    documento = models.ForeignKey(
+        Documento, on_delete=models.CASCADE, related_name="assinaturas"
+    )
+    assinante = models.ForeignKey(
+        Profissional, on_delete=models.CASCADE, related_name="assinaturas_realizadas"
+    )
+    data_assinatura = models.DateTimeField(default=timezone.now)
+    assinatura_eletronica = models.TextField(
+        verbose_name="Assinatura Eletrônica", blank=True, null=True
+    )
+    validade_assinatura = models.DateField(
+        blank=True, null=True, verbose_name="Validade da Assinatura"
+    )
+    ip_assinatura = models.GenericIPAddressField(
+        verbose_name="Endereço IP da Assinatura", blank=True, null=True
+    )
+    localizacao_assinatura = models.CharField(
+        max_length=255, verbose_name="Localização da Assinatura", blank=True, null=True
+    )
+    biometria_hash = models.CharField(
+        max_length=256, verbose_name="Hash da Biometria", blank=True, null=True
+    )
+    dupla_autenticacao = models.BooleanField(
+        default=False, verbose_name="Autenticação em Duas Etapas"
+    )
+    ferramenta_dispositivo = models.CharField(
+        max_length=100,
+        verbose_name="Ferramenta/Dispositivo Utilizado",
+        blank=True,
+        null=True,
+    )
+    historico_eventos = models.TextField(
+        verbose_name="Histórico de Eventos", blank=True, null=True
+    )
+
+    class Meta:
+        ordering = ["-data_assinatura"]
+        verbose_name = "Assinatura"
+        verbose_name_plural = "Assinaturas"
+
+    def __str__(self):
+        return f"Assinatura de {self.assinante.nome_completo} no documento {self.documento.titulo}"
+
+    def is_valid(self):
+        # Verifica se a assinatura ainda é válida
+        if self.validade_assinatura:
+            return timezone.now().date() <= self.validade_assinatura
+        return True
+
+    def gerar_assinatura_eletronica(self):
+        # Gera uma assinatura eletrônica única usando hash do documento,
+        # informações do assinante e autenticação em duas etapas
+        if self.documento and self.assinante:
+            dados = f"{self.documento.hash_documento}{self.assinante.uuid}{self.data_assinatura}"
+            if self.dupla_autenticacao:
+                dados += "dupla_autenticacao"
+            self.assinatura_eletronica = hashlib.sha256(dados.encode()).hexdigest()
+            self.save()
+
+    def validar_biometria(self, biometria_dados):
+        # Valida a biometria fornecida comparando com o hash armazenado
+        if biometria_dados:
+            biometria_hash = hashlib.sha256(biometria_dados.encode()).hexdigest()
+            return biometria_hash == self.biometria_hash
+        return False
+
+    def registrar_evento(self, evento):
+        # Registra um evento no histórico de assinatura
+        if self.historico_eventos:
+            self.historico_eventos += f"\n{timezone.now()}: {evento}"
+        else:
+            self.historico_eventos = f"{timezone.now()}: {evento}"
+        self.save()
+from django.db import models
+from django.utils import timezone
+from apps.pacientes.models import Paciente
+from apps.profissionais.models import Profissional
+from apps.agendamentos.models import Agendamento
+from apps.documentos.models import DocumentosModel
+from apps.financeiro.models import Transacao
+from apps.assinaturas.models import Assinatura
+from apps.prontuarios.models import ProcedimentoRealizado
+
+# Ajuste o caminho conforme a localização do modelo
+from apps.iot.models import DispositivoIoT
+
+
+class Atendimento(models.Model):
+    STATUS_CHOICES = [
+        ("Pendente", "Pendente"),
+        ("Em Andamento", "Em Andamento"),
+        ("Concluído", "Concluído"),
+        ("Cancelado", "Cancelado"),
+        ("Aguardando Documentação", "Aguardando Documentação"),
+        ("Aguardando Pagamento", "Aguardando Pagamento"),
+    ]
+
+    paciente = models.ForeignKey(
+        Paciente, on_delete=models.CASCADE, related_name="atendimentos"
+    )
+    profissional = models.ForeignKey(
+        Profissional, on_delete=models.CASCADE, related_name="atendimentos"
+    )
+    agendamento = models.OneToOneField(
+        Agendamento,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="atendimento",
+    )
+    procedimentos = models.ManyToManyField(
+        ProcedimentoRealizado, related_name="atendimentos", blank=True
+    )
+    dispositivos_iot = models.ManyToManyField(
+        DispositivoIoT, related_name="atendimentos", blank=True
+    )
+    # seguro_saude = models.ForeignKey(SeguroSaude, on_delete=models.SET_NULL, null=True, blank=True, related_name='atendimentos')
+    data_atendimento = models.DateField(default=timezone.now)
+    horario_inicio = models.TimeField()
+    horario_fim = models.TimeField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="Pendente")
+    diagnostico = models.TextField(null=True, blank=True)
+    prescricao = models.TextField(null=True, blank=True)
+    tratamento = models.TextField(null=True, blank=True)
+    assinatura_profissional = models.ForeignKey(
+        Assinatura,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assinaturas_profissionais",
+    )
+    autorizacao_paciente = models.ForeignKey(
+        Assinatura,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="autorizacoes_pacientes",
+    )
+    feedback_paciente = models.TextField(null=True, blank=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    transacao_financeira = models.OneToOneField(
+        Transacao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="atendimento",
+    )
+    recomendacoes_ia = models.TextField(null=True, blank=True)
+    recomendacoes_automaticas = models.TextField(null=True, blank=True)
+    avaliacao_risco = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    consentimento_paciente = models.BooleanField(default=False)
+    documentacao_completa = models.BooleanField(default=False)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Atendimento"
+        verbose_name_plural = "Atendimentos"
+        ordering = ["-data_atendimento", "-horario_inicio"]
+
+    def __str__(self):
+        return f"Atendimento de {self.paciente.nome_completo} com {self.profissional.nome_completo} em {self.data_atendimento}"
+
+    def save(self, *args, **kwargs):
+        # Lógica adicional para integração com IoT, IA e outros serviços
+        if self.status == "Concluído" and not self.transacao_financeira:
+            # Cria uma transação financeira se o atendimento for concluído
+            self.transacao_financeira = Transacao.objects.create(
+                paciente=self.paciente,
+                valor=self.valor,
+                descricao=f"Pagamento pelo atendimento em {self.data_atendimento}",
+                status="Pendente",
+            )
+
+        # Integração com IA e Machine Learning para análise do atendimento
+        # Exemplo: Enviar dados para serviço de IA para sugerir tratamentos ou
+        # analisar feedback
+
+        super().save(*args, **kwargs)
+
+    def finalizar_atendimento(self):
+        # Método para finalizar o atendimento e garantir todas as validações
+        # necessárias
+        if self.status == "Concluído":
+            if not self.assinatura_profissional or not self.autorizacao_paciente:
+                raise ValueError(
+                    "Assinatura do profissional e autorização do paciente são obrigatórias para concluir o atendimento."
+                )
+            if not self.diagnostico or not self.prescricao:
+                raise ValueError(
+                    "Diagnóstico e prescrição são obrigatórios para concluir o atendimento."
+                )
+
+        # Atualiza o status do agendamento associado
+        if self.agendamento:
+            self.agendamento.status = "Concluído"
+            self.agendamento.save()
+
+        # Enviar notificações para o paciente e profissional
+
+        self.save()
+
+
+class AuditoriaAtendimento(models.Model):
+    atendimento = models.ForeignKey(
+        Atendimento, on_delete=models.CASCADE, related_name="auditorias"
+    )
+    usuario = models.CharField(max_length=255)
+    alteracoes = models.TextField()
+    data_alteracao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auditoria de Atendimento"
+        verbose_name_plural = "Auditorias de Atendimentos"
+        ordering = ["-data_alteracao"]
+
+    def __str__(self):
+        return f"Auditoria do Atendimento {self.atendimento.id} por {self.usuario} em {self.data_alteracao}"
+# Módulo Exames - Models (models.py)
+
+from django.db import models
+from django.utils import timezone
+import uuid
+from apps.pacientes.models import Paciente
+from apps.profissionais.models import Profissional
+from apps.documentos.models import DocumentosModel
+
+
+class Exame(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    paciente = models.ForeignKey(
+        Paciente, on_delete=models.CASCADE, related_name="exames"
+    )
+    profissional_solicitante = models.ForeignKey(
+    Profissional,
+    on_delete=models.SET_NULL,
+    null=True,
+    related_name="exames_solicitados_exame",  # Alterar para um nome único
+    verbose_name="Profissional Solicitante",
+)
+
+    tipo_exame = models.CharField(max_length=100, verbose_name="Tipo de Exame")
+    data_solicitacao = models.DateField(
+        default=timezone.now, verbose_name="Data de Solicitação"
+    )
+    data_realizacao = models.DateField(
+        blank=True, null=True, verbose_name="Data de Realização"
+    )
+    resultados = models.TextField(
+        verbose_name="Resultados do Exame", blank=True, null=True
+    )
+    documento_resultado = models.ForeignKey(
+        DocumentosModel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="exames_resultados",
+        verbose_name="Documento do Resultado",
+    )
+    observacoes = models.TextField(verbose_name="Observações", blank=True, null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("Solicitado", "Solicitado"),
+            ("Realizado", "Realizado"),
+            ("Cancelado", "Cancelado"),
+        ],
+        default="Solicitado",
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-data_solicitacao"]
+        verbose_name = "Exame"
+        verbose_name_plural = "Exames"
+
+    def __str__(self):
+        return f"Exame {self.tipo_exame} de {self.paciente.nome_completo}"
+
+    def is_realizado(self):
+        return self.status == "Realizado"
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.urls import reverse
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
+from .models import Transacao, Fatura, Orcamento
+
+class FinanceiroTests(APITestCase):
+    def setUp(self):
+        # Criar superusuário para autenticação
+        self.user = User.objects.create_superuser(username="admin", password="adminpassword")
+
+        # Gerar token JWT
+        refresh = RefreshToken.for_user(self.user)
+        self.token = str(refresh.access_token)
+
+        # Configurar o cabeçalho de autorização para usar o token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
+
+        # Dados iniciais para os testes
+        self.transacao_data = {
+            "descricao": "Consulta",
+            "valor": 100.00,
+            "tipo": "receita",
+            "categoria": "consulta",
+        }
+        self.fatura_data = {
+            "vencimento": "2025-01-10",
+            "valor": 100.00,
+            "meio_pagamento": "pix",
+        }
+        self.orcamento_data = {
+            "centro_custo": "Radiologia",
+            "periodo_inicio": "2025-01-01",
+            "periodo_fim": "2025-12-31",
+            "valor_planejado": 50000.00,
+        }
+
+    def test_create_transacao(self):
+        response = self.client.post(reverse('transacao-list'), self.transacao_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_fatura(self):
+        response = self.client.post(reverse('fatura-list'), self.fatura_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_orcamento(self):
+        response = self.client.post(reverse('orcamento-list'), self.orcamento_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+from cryptography.fernet import Fernet
+from django.conf import settings
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+import uuid
+from django.utils import timezone
+
+# Gerar uma chave de criptografia para uso nos campos sensíveis (a chave deve ser armazenada em um local seguro)
+# Aqui estamos simulando a recuperação da chave do arquivo de configurações
+cipher_suite = Fernet(settings.ENCRYPTION_KEY)
+
+class Paciente(models.Model):
+    # Identificador Único Global
+    uuid = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
+
+    # Dados Pessoais
+    nome_completo = models.CharField(_("Nome Completo"), max_length=255)
+    foto = models.ImageField(
+        _("Foto"), upload_to="pacientes/fotos/", blank=True, null=True
+    )
+    cpf = models.CharField(_("CPF"), max_length=255, unique=True)
+    rg = models.CharField(_("RG"), max_length=255, blank=True)
+    data_nascimento = models.DateField(_("Data de Nascimento"))
+    sexo = models.CharField(
+        _("Sexo"),
+        max_length=1,
+        choices=[
+            ("M", "Masculino"),
+            ("F", "Feminino"),
+            ("O", "Outro"),
+        ],
+    )
+    estado_civil = models.CharField(_("Estado Civil"), max_length=50, blank=True)
+    profissao = models.CharField(_("Profissão"), max_length=100, blank=True)
+    nacionalidade = models.CharField(_("Nacionalidade"), max_length=100, blank=True)
+    naturalidade = models.CharField(_("Naturalidade"), max_length=100, blank=True)
+    endereco = models.CharField(_("Endereço"), max_length=255)
+    numero = models.CharField(_("Número"), max_length=10)
+    complemento = models.CharField(_("Complemento"), max_length=100, blank=True)
+    bairro = models.CharField(_("Bairro"), max_length=100)
+    cidade = models.CharField(_("Cidade"), max_length=100)
+    estado = models.CharField(_("Estado"), max_length=100)
+    cep = models.CharField(_("CEP"), max_length=9, blank=True)
+    telefone_residencial = models.CharField(
+        _("Telefone Residencial"), max_length=20, blank=True
+    )
+    telefone_celular = models.CharField(
+        _("Telefone Celular"), max_length=20, blank=True
+    )
+    email = models.EmailField(_("E-mail"), blank=True)
+    contato_emergencia = models.CharField(
+        _("Contato de Emergência"), max_length=255, blank=True
+    )
+    telefone_emergencia = models.CharField(
+        _("Telefone de Emergência"), max_length=20, blank=True
+    )
+
+    # Dados Complementares
+    nome_mae = models.CharField(_("Nome da Mãe"), max_length=255, blank=True)
+    nome_pai = models.CharField(_("Nome do Pai"), max_length=255, blank=True)
+    consentimento_lgpd = models.BooleanField(_("Consentimento LGPD"), default=False)
+    observacoes = models.TextField(_("Observações"), blank=True)
+
+    # Relacionamentos
+    prontuario = models.OneToOneField(
+        "prontuarios.Prontuario",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="paciente_prontuario",
+    )
+
+    # Auditoria
+    created_at = models.DateTimeField(_("Data de Criação"), default=timezone.now)
+    updated_at = models.DateTimeField(_("Última Atualização"), auto_now=True)
+
+    class Meta:
+        app_label = "pacientes"
+        verbose_name = _("Paciente")
+        verbose_name_plural = _("Pacientes")
+
+    def __str__(self):
+        return self.nome_completo
+
+    def save(self, *args, **kwargs):
+        # Criptografar CPF e RG antes de salvar
+        if self.cpf:
+            self.cpf = cipher_suite.encrypt(self.cpf.encode()).decode()
+        if self.rg:
+            self.rg = cipher_suite.encrypt(self.rg.encode()).decode()
+        super().save(*args, **kwargs)
+
+    def decrypt_cpf(self):
+        # Descriptografar o CPF para uso
+        if self.cpf:
+            try:
+                return cipher_suite.decrypt(self.cpf.encode()).decode()
+            except Exception as e:
+                return f"Erro ao descriptografar CPF: {e}"
+        return None
+
+    def decrypt_rg(self):
+        # Descriptografar o RG para uso
+        if self.rg:
+            try:
+                return cipher_suite.decrypt(self.rg.encode()).decode()
+            except Exception as e:
+                return f"Erro ao descriptografar RG: {e}"
+        return None
+# Módulo Prontuários - Criação do Modelo (models.py)
+
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+import uuid
+from django.conf import settings
+
+
+class Prontuario(models.Model):
+    # Identificador Único Global
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    # Dados Relacionados ao Paciente
+    paciente = models.ForeignKey(
+    "pacientes.Paciente",
+    on_delete=models.CASCADE,
+    related_name="prontuarios",  # Alterar para evitar conflito com campo em Paciente
+)
+
+    # Evoluções Clínicas e Atendimentos
+    data_atendimento = models.DateTimeField(_("Data do Atendimento"))
+    profissional_responsavel = models.ForeignKey(
+    "profissionais.Profissional",
+    on_delete=models.SET_NULL,
+    null=True,
+    related_name="exames_solicitados_complementar",  # Alterar para um nome único
+)
+
+    queixa_principal = models.TextField(_("Queixa Principal"), blank=True)
+    historico_doenca_atual = models.TextField(
+        _("Histórico da Doença Atual"), blank=True
+    )
+    antecedentes_pessoais = models.TextField(_("Antecedentes Pessoais"), blank=True)
+    exame_fisico_cabeca_pescoco = models.TextField(
+        _("Exame Físico - Cabeça e Pescoço"), blank=True
+    )
+    exame_fisico_torax = models.TextField(_("Exame Físico - Tórax"), blank=True)
+    exame_fisico_abdomen = models.TextField(_("Exame Físico - Abdômen"), blank=True)
+    exame_fisico_membros = models.TextField(
+        _("Exame Físico - Membros Superiores e Inferiores"), blank=True
+    )
+    hipotese_diagnostica = models.TextField(_("Hipótese Diagnóstica"), blank=True)
+    conduta = models.TextField(_("Conduta/Plano"), blank=True)
+    prescricao = models.TextField(_("Prescrição Médica"), blank=True)
+    tratamentos_previos = models.TextField(_("Tratamentos Prévio(s)"), blank=True)
+
+    # Diagnósticos
+    diagnostico_final = models.CharField(
+        _("Diagnóstico Final"), max_length=255, blank=True
+    )
+    cid_10 = models.CharField(_("CID-10"), max_length=10, blank=True)
+
+    # Anotações de Outros Profissionais
+    anotacoes_profissionais = models.TextField(
+        _("Anotações de Outros Profissionais"), blank=True
+    )
+
+    # Referências e Encaminhamentos
+    encaminhamentos = models.TextField(_("Encaminhamentos"), blank=True)
+    referencias_especialidades = models.TextField(
+        _("Referências para Especialidades"), blank=True
+    )
+
+    # Consentimento e Termos
+    consentimento_informado = models.BooleanField(
+        _("Consentimento Informado Assinado"), default=False
+    )
+
+    # Histórico Familiar
+    historico_familiar = models.TextField(_("Histórico Familiar"), blank=True)
+    risco_genetico = models.TextField(_("Risco Genético Identificado"), blank=True)
+
+    # Dados Psicológicos e Sociais
+    dados_psicossociais = models.TextField(
+        _("Dados Psicológicos e Sociais"), blank=True
+    )
+    estado_emocional = models.TextField(_("Estado Emocional"), blank=True)
+    transtornos_identificados = models.TextField(
+        _("Transtornos Identificados"), blank=True
+    )
+    medicacoes_psiquiatricas = models.TextField(
+        _("Medicações Psiquiátricas"), blank=True
+    )
+
+    # Histórico de Hábitos de Vida
+    tabagismo = models.BooleanField(_("Tabagismo"), default=False)
+    etilismo = models.BooleanField(_("Etilismo"), default=False)
+    uso_drogas = models.BooleanField(_("Uso de Drogas"), default=False)
+    atividade_fisica = models.CharField(
+        _("Atividade Física"), max_length=255, blank=True
+    )
+    alimentacao = models.CharField(_("Alimentação"), max_length=255, blank=True)
+    qualidade_sono = models.CharField(
+        _("Qualidade do Sono"), max_length=255, blank=True
+    )
+    ocupacao = models.CharField(_("Ocupação"), max_length=255, blank=True)
+    nivel_estresse = models.CharField(
+        _("Nível de Estresse"), max_length=255, blank=True
+    )
+    medicacoes_nao_prescritas = models.TextField(
+        _("Medicações Não Prescritas"), blank=True
+    )
+
+    # Histórico de Cirurgias e Internações
+    historico_cirurgias = models.TextField(_("Histórico de Cirurgias"), blank=True)
+    historico_internacoes = models.TextField(_("Histórico de Internações"), blank=True)
+
+    # Histórico de Imunizações
+    imunizacoes = models.TextField(_("Histórico de Imunizações"), blank=True)
+
+    # Estratificação de Risco
+    estratificacao_risco = models.CharField(
+        _("Estratificação de Risco"), max_length=255, blank=True
+    )
+    risco_quedas = models.CharField(_("Risco de Quedas"), max_length=255, blank=True)
+
+    # Motivo do Atendimento
+    motivo_atendimento = models.CharField(
+        _("Motivo do Atendimento"), max_length=255, blank=True
+    )
+
+    # Acompanhamento de Doenças Crônicas
+    diabetes_hemoglobina_glicada = models.DecimalField(
+        _("Hemoglobina Glicada (%)"),
+        max_digits=4,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+    funcao_renal_taxa_filtracao = models.DecimalField(
+        _("Taxa de Filtração Glomerular (mL/min)"),
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+
+    # Avaliação Nutricional
+    imc = models.DecimalField(
+        _("Índice de Massa Corporal (IMC)"),
+        max_digits=4,
+        decimal_places=1,
+        blank=True,
+        null=True,
+    )
+    percentual_gordura_corporal = models.DecimalField(
+        _("Percentual de Gordura Corporal (%)"),
+        max_digits=4,
+        decimal_places=1,
+        blank=True,
+        null=True,
+    )
+    dieta_recomendada = models.TextField(_("Dieta Recomendada"), blank=True)
+
+    # Planos de Saúde e Seguros
+    plano_saude = models.CharField(_("Plano de Saúde"), max_length=255, blank=True)
+    numero_plano_saude = models.CharField(
+        _("Número do Plano de Saúde"), max_length=255, blank=True
+    )
+
+    # Auditoria
+    created_at = models.DateTimeField(_("Data de Criação"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Última Atualização"), auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="prontuarios_criados",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="prontuarios_atualizados",
+    )
+
+    prescricao = models.TextField()
+
+    class Meta:
+        verbose_name = _("Prontuário")
+        verbose_name_plural = _("Prontuários")
+
+    def __str__(self):
+        return self.prescricao
+
+
+class HistoricoMedicamentos(models.Model):
+    prontuario = models.ForeignKey(
+        Prontuario, on_delete=models.CASCADE, related_name="historico_medicamentos"
+    )
+    medicamento = models.CharField(_("Medicamento"), max_length=255)
+    dosagem = models.CharField(_("Dosagem"), max_length=255)
+    frequencia = models.CharField(_("Frequência"), max_length=255)
+    duracao = models.CharField(_("Duração"), max_length=255)
+    observacoes = models.TextField(_("Observações"), blank=True)
+    prescrito_por = models.ForeignKey(
+        "profissionais.Profissional", on_delete=models.SET_NULL, null=True
+    )
+    data_prescricao = models.DateTimeField(_("Data da Prescrição"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Histórico de Medicamento")
+        verbose_name_plural = _("Histórico de Medicamentos")
+
+    def __str__(self):
+        return f"Medicamento: {self.medicamento} - Paciente: {self.prontuario.paciente.nome_completo}"
+
+
+class EvolucaoClinica(models.Model):
+    prontuario = models.ForeignKey(
+        Prontuario, on_delete=models.CASCADE, related_name="evolucoes_clinicas"
+    )
+    data_evolucao = models.DateTimeField(_("Data da Evolução"), auto_now_add=True)
+    profissional_responsavel = models.ForeignKey(
+        "profissionais.Profissional", on_delete=models.SET_NULL, null=True
+    )
+    descricao = models.TextField(_("Descrição da Evolução"))
+
+    class Meta:
+        verbose_name = _("Evolução Clínica")
+        verbose_name_plural = _("Evoluções Clínicas")
+
+    def __str__(self):
+        return f"Evolução em {self.data_evolucao} - Paciente: {self.prontuario.paciente.nome_completo}"
+
+
+class DadosVitais(models.Model):
+    prontuario = models.ForeignKey(
+        Prontuario, on_delete=models.CASCADE, related_name="dados_vitais"
+    )
+    data_registro = models.DateTimeField(_("Data do Registro"), auto_now_add=True)
+    pressao_arterial = models.CharField(
+        _("Pressão Arterial"), max_length=50, blank=True
+    )
+    frequencia_cardiaca = models.CharField(
+        _("Frequência Cardíaca"), max_length=50, blank=True
+    )
+    temperatura = models.DecimalField(
+        _("Temperatura Corporal (°C)"),
+        max_digits=4,
+        decimal_places=1,
+        blank=True,
+        null=True,
+    )
+    saturacao_oxigenio = models.CharField(
+        _("Saturação de Oxigênio (%)"), max_length=50, blank=True
+    )
+    peso = models.DecimalField(
+        _("Peso (kg)"), max_digits=5, decimal_places=2, blank=True, null=True
+    )
+    altura = models.DecimalField(
+        _("Altura (m)"), max_digits=4, decimal_places=2, blank=True, null=True
+    )
+    glicemia = models.DecimalField(
+        _("Glicemia (mg/dL)"), max_digits=5, decimal_places=2, blank=True, null=True
+    )
+    colesterol_total = models.DecimalField(
+        _("Colesterol Total (mg/dL)"),
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+    triglicerides = models.DecimalField(
+        _("Triglicérides (mg/dL)"),
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Dados Vitais")
+        verbose_name_plural = _("Dados Vitais")
+
+    def __str__(self):
+        return f"Dados Vitais em {self.data_registro} - Paciente: {self.prontuario.paciente.nome_completo}"
+
+
+class HistoricoAcessosProntuario(models.Model):
+    prontuario = models.ForeignKey(
+        Prontuario, on_delete=models.CASCADE, related_name="historico_acessos"
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
+    )
+    data_acesso = models.DateTimeField(_("Data do Acesso"), auto_now_add=True)
+    tipo_acesso = models.CharField(
+        _("Tipo de Acesso"),
+        max_length=50,
+        choices=[("visualizacao", "Visualização"), ("alteracao", "Alteração")],
+    )
+
+    class Meta:
+        verbose_name = _("Histórico de Acesso ao Prontuário")
+        verbose_name_plural = _("Histórico de Acessos ao Prontuário")
+
+    def __str__(self):
+        return f"Acesso em {self.data_acesso} - Paciente: {self.prontuario.paciente.nome_completo} por {self.usuario}"
+
+
+class ExameComplementar(models.Model):
+    prontuario = models.ForeignKey(
+        Prontuario, on_delete=models.CASCADE, related_name="exames_complementares"
+    )
+    tipo_exame = models.CharField(_("Tipo de Exame"), max_length=255)
+    data_solicitacao = models.DateTimeField(_("Data da Solicitação"), auto_now_add=True)
+    data_resultado = models.DateTimeField(_("Data do Resultado"), null=True, blank=True)
+    resultado = models.TextField(_("Resultado do Exame"), blank=True)
+    profissional_responsavel = models.ForeignKey(
+        "profissionais.Profissional",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="exames_solicitados",
+    )
+    imagem_associada = models.ImageField(
+        _("Imagem Associada"), upload_to="exames/imagens/", blank=True, null=True
+    )
+
+    class Meta:
+        verbose_name = _("Exame Complementar")
+        verbose_name_plural = _("Exames Complementares")
+
+    def __str__(self):
+        return f"Exame: {self.tipo_exame} - Paciente: {self.prontuario.paciente.nome_completo}"
+
+
+class ProcedimentoRealizado(models.Model):
+    prontuario = models.ForeignKey(
+        Prontuario, on_delete=models.CASCADE, related_name="procedimentos_realizados"
+    )
+    tipo_procedimento = models.CharField(_("Tipo de Procedimento"), max_length=255)
+    data_procedimento = models.DateTimeField(
+        _("Data do Procedimento"), auto_now_add=True
+    )
+    profissional_responsavel = models.ForeignKey(
+        "profissionais.Profissional",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="procedimentos_realizados",
+    )
+    observacoes = models.TextField(_("Observações"), blank=True)
+    consentimento_associado = models.ForeignKey(
+        "assinaturas.Assinatura",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="procedimentos_consentidos",
+    )
+
+    class Meta:
+        verbose_name = _("Procedimento Realizado")
+        verbose_name_plural = _("Procedimentos Realizados")
+
+class Anamnese(models.Model):
+    paciente = models.ForeignKey('pacientes.Paciente', on_delete=models.CASCADE, related_name='anamneses')
+    profissional = models.ForeignKey('profissionais.Profissional', on_delete=models.CASCADE, related_name='anamneses')
+    texto = models.TextField(verbose_name=_("Anamnese"))
+    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name=_("Criado em"))
+
+    class Meta:
+        verbose_name = _("Anamnese")
+        verbose_name_plural = _("Anamneses")
+
+    def __str__(self):
+        return f"Anamnese de {self.paciente.nome_completo} - {self.data_criacao}""""
+Django settings for ClinicaAI project.
+
+Generated by 'django-admin startproject' using Django 4.2.16.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/4.2/topics/settings/
+
+For the full list of settings and their values, see
+https://docs.djangoproject.com/en/4.2/ref/settings/
+"""
+
+from pathlib import Path
+from cryptography.fernet import Fernet
+from datetime import timedelta
+from celery.schedules import crontab
+import sys
+
+# Gere uma chave de criptografia
+ENCRYPTION_KEY = 'IpmmvITSPLun5m6lOtUPHszQ7yTKRlmAHQ9JC47XMKg='
+
+def decrypt(encrypted_text):
+    # Adicione padding se necessário
+    padding = len(encrypted_text) % 4
+    if padding != 0:
+        encrypted_text += '=' * (4 - padding)
+    try:
+        cipher_suite = Fernet(ENCRYPTION_KEY)
+        decrypted_text = cipher_suite.decrypt(encrypted_text.encode()).decode()
+        return decrypted_text
+    except Exception as e:
+        raise ValueError(f"Erro ao descriptografar o texto: {e}")
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = decrypt('gAAAAABncfHWNo6zmHaKhNfNchedvGqjsJbCVDVWMZRmWKTKCAjCesVQrZOuImCOiZG33ls__sm-o74_5w4_DPPaeOtdWfIhAA==')  # Substituido
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = []
+
+
+# Application definition
+
+INSTALLED_APPS = [
+    'prometheus_client',
+    'drf_yasg',
+    'channels',
+    'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'apps.whatsapp',
+    'apps.conhecimento',
+    'apps.voip',
+    'apps.iot',
+    'apps.aprovacoes',
+    'apps.mensagens',
+    'apps.produtividade',
+    'apps.compromissos',
+    'apps.central_ajuda',
+    'apps.servico_campo',
+    'apps.planilhas_horas',
+    'apps.projeto',
+    'apps.pesquisas',
+    'apps.automacao_marketing',
+    'apps.eventos',
+    'apps.marketing_sms',
+    'apps.marketing_email',
+    'apps.redes_sociais',
+    'apps.frota',
+    'apps.indicacoes',
+    'apps.avaliacoes',
+    'apps.folgas',
+    'apps.recrutamento',
+    'apps.recursos_humanos',
+    'apps.qualidade',
+    'apps.manutencao',
+    'apps.compras',
+    'apps.prontuarios',
+    'apps.plm',
+    'apps.fabricacao',
+    'apps.inventario',
+    'apps.elearning',
+    'apps.chat_ao_vivo',
+    'apps.forum',
+    'apps.blog',
+    'apps.ecommerce',
+    'apps.criador_sites',
+    'apps.locacao',
+    'apps.clinica_core',
+    'apps.assinaturas',
+    'apps.crm',
+    'apps.vendas',
+    'apps.assinar_documentos',
+    'apps.documentos',
+    'apps.planilhas',
+    'apps.despesas',
+    'apps.faturamento',
+    'apps.financeiro',
+    'apps.agendamentos',
+    'apps.pacientes',
+    'apps.profissionais',
+    'apps.authentication',
+    'rest_framework_simplejwt.token_blacklist',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_celery_beat',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'ClinicaAI.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'ClinicaAI.wsgi.application'
+
+
+# Database
+# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'clinicaai',
+        'USER': 'postgres',
+        'PASSWORD': decrypt('gAAAAABncfHWNo6zmHaKhNfNchedvGqjsJbCVDVWMZRmWKTKCAjCesVQrZOuImCOiZG33ls__sm-o74_5w4_DPPaeOtdWfIhAA=='),  # Substitua pelo texto criptografado gerado para a senha do banco de dados
+        'HOST': 'localhost',
+        'PORT': '5432'
+    },
+
+}
+
+
+# Password validation
+# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
+
+LANGUAGE_CODE = 'pt-br'
+
+TIME_ZONE = 'America/Sao_Paulo'
+
+USE_I18N = True  # Ativa suporte a traduções
+USE_L10N = True  # Formatação de números, datas e etc.
+USE_TZ = True    # Ativa suporte a fuso horário
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
+STATIC_URL = 'static/'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configurações de CORS
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Ou permitir origens específicas
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+# ]
+
+# Configurações do Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',  # Exigir autenticação por padrão
+    ),
+'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+}
+
+# Configurações do Simple JWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=3),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+     'TOKEN_BLACKLIST_ENABLED': True, 
+}
+
+ASGI_APPLICATION = 'ClinicaAI.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+CELERY_BEAT_SCHEDULE = {
+    'enviar-lembretes-vencimento': {
+        'task': 'apps.financeiro.tasks.enviar_lembretes_vencimento',
+        'schedule': crontab(minute=0, hour=8),  # Todos os dias às 8h
+    },
+    'enviar-alertas-atraso': {
+        'task': 'apps.financeiro.tasks.enviar_alertas_atraso',
+        'schedule': crontab(minute=0, hour=9),  # Todos os dias às 9h
+    },
+    'conciliar-transacoes': {
+        'task': 'apps.financeiro.tasks.conciliar_transacoes',
+        'schedule': crontab(minute=0, hour=23),  # Diariamente às 23h
+    },
+    'gerar-relatorio-financeiro': {
+        'task': 'apps.financeiro.tasks.gerar_relatorio_financeiro',
+        'schedule': crontab(minute=0, hour=6, day_of_month='1'),  # Todo primeiro dia do mês
+        'args': ['2025-01-01', '2025-01-31'],  # Substitua pelos períodos corretos
+    },
+}
+# Configurações específicas para testes
+if "pytest" in sys.modules:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',  # Banco de dados leve para testes
+            'NAME': ':memory:',  # Banco em memória
+        }
+    }
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

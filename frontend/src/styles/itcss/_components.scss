@@ -1,0 +1,38 @@
+@use 'sass:color';
+@use 'sass:map';
+@use './settings' as settings; 
+@use './tools' as tools;
+
+body {
+  font-family: settings.$font-family;
+  margin: 0;
+  padding: 0;
+  color: settings.$text-color;
+  background-color: #f9f9f9;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 settings.$spacing-unit 0;
+  color: settings.$primary-color;
+}
+
+button {
+  background-color: settings.$primary-color;
+  color: #fff;
+  border: none;
+  padding: settings.$spacing-unit * 2 settings.$spacing-unit * 4;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: color.adjust(settings.$primary-color, $lightness: -15%);
+  }
+
+  &:active {
+    background-color: color.adjust(settings.$primary-color, $lightness: -20%);
+  }
+}
+

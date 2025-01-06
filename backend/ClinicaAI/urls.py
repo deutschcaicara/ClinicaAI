@@ -16,9 +16,29 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
+from rest_framework import routers
+from django.utils.log import DEFAULT_LOGGING
+import logging
+
+logger = logging.getLogger(__name__)
+
+router = routers.DefaultRouter()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('apps.prontuarios.urls')),  # Inclua as URLs do aplicativo prontuarios
-    # ...outras rotas...
+    path('api/auth/', include('apps.authentication.urls')),  
+    path('api/prontuarios/', include('apps.prontuarios.urls')),
+    path('api/profissionais/', include('apps.profissionais.urls')),
+    path('api/', include('apps.pacientes.urls')),
+    path('api/', include(router.urls)),
+    path('api/dashboard/', include('apps.dashboard.urls')),
+    path("api/financeiro/", include("apps.financeiro.urls")),
+    
+
 ]
+

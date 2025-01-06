@@ -1,0 +1,57 @@
+@use '../../styles/itcss/settings' as settings;
+@use 'sass:color';
+
+.patients {
+  padding: settings.$spacing-unit * 2;
+
+  h1 {
+    margin-bottom: settings.$spacing-unit * 2;
+    font-size: 1.5rem;
+    color: settings.$primary-color;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: settings.$spacing-unit;
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: settings.$spacing-unit;
+      text-align: left;
+    }
+
+    th {
+      background-color: settings.$primary-color;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: settings.$background-color;
+    }
+
+    tr:hover {
+      background-color: color.adjust(settings.$primary-color, $lightness: 40%);
+    }
+
+    td {
+      font-size: 0.9rem;
+      color: settings.$text-color;
+    }
+  }
+
+  // Estilização de mensagens de erro e carregamento
+  .loading {
+    text-align: center;
+    font-size: 1rem;
+    color: settings.$secondary-color;
+  }
+
+  .error {
+    text-align: center;
+    color: red;
+    font-weight: bold;
+  }
+}

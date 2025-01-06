@@ -1,0 +1,53 @@
+@use 'sass:color';
+@use '../../styles/itcss/settings' as settings;
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: settings.$background-color;
+  
+    .login-form {
+      background: #e9e3e3;
+      padding: settings.$spacing-unit * 4;
+      border-radius: settings.$border-radius;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+  
+      h1 {
+        margin-bottom: settings.$spacing-unit * 2;
+        color: settings.$primary-color;
+        text-align: center;
+      }
+  
+      input {
+        width: 100%;
+        padding: settings.$spacing-unit;
+        margin-bottom: settings.$spacing-unit * 2;
+        border: 1px solid #ccc;
+        border-radius: settings.$border-radius;
+  
+        &:focus {
+          border-color: settings.$primary-color;
+          outline: none;
+        }
+      }
+  
+      button {
+        width: 100%;
+        padding: settings.$spacing-unit;
+        background-color: settings.$primary-color;
+        color: #fff;
+        border: none;
+        border-radius: settings.$border-radius;
+        cursor: pointer;
+  
+        &:hover {
+            background-color: color.scale(settings.$primary-color, $lightness: -10%);
+        }
+      }
+    }
+  }
+  

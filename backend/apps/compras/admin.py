@@ -1,7 +1,6 @@
 from django.contrib import admin
-from .models import ComprasModel
+from .models import Fornecedor
 
-
-@admin.register(ComprasModel)
-class ComprasAdmin(admin.ModelAdmin):
-    list_display = ("nome", "criado_em", "atualizado_em")
+@admin.register(Fornecedor)
+class FornecedorAdmin(admin.ModelAdmin):
+    list_display = ("nome", "email", "telefone", "criado_em")

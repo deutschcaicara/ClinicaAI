@@ -5,11 +5,13 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r"especialidades", views.EspecialidadeViewSet)
-router.register(r"profissionais", views.ProfissionalViewSet)
-router.register(r"disponibilidades", views.DisponibilidadeViewSet)
-router.register(r"horas_trabalhadas", views.RegistroHorasTrabalhadasViewSet)
+router.register(r'especialidades', views.EspecialidadeViewSet)
+router.register(r'profissionais', views.ProfissionalViewSet)
+router.register(r'disponibilidades', views.DisponibilidadeViewSet)
+router.register(r'horas_trabalhadas', views.RegistroHorasTrabalhadasViewSet)
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path('', include(router.urls)),
+    path('list/', views.ProfissionalList.as_view(), name='profissional-list'),
+    path('detail/<int:pk>/', views.ProfissionalDetail.as_view(), name='profissional-detail'),
 ]

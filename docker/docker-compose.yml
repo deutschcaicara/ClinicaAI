@@ -4,7 +4,7 @@ services:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_USER: diego
+      POSTGRES_USER: postgress
       POSTGRES_PASSWORD: Mouse2250@#86
       POSTGRES_DB: clinicaai
     ports:

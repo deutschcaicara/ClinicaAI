@@ -1,0 +1,131 @@
+@use '../../styles/itcss/settings' as settings;
+@use 'sass:math'; // Import necessário para math.div()
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+
+  .sidebar {
+    background-color: settings.$secondary-color;
+    color: #fff;
+    width: 250px;
+    padding: settings.$spacing-unit * 2;
+
+    h2 {
+      margin-bottom: settings.$spacing-unit;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        margin: settings.$spacing-unit 0;
+
+        a {
+          color: #fff;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+
+  .main-content {
+    flex: 1;
+    padding: settings.$spacing-unit * 2;
+
+    header {
+      margin-bottom: settings.$spacing-unit * 2;
+
+      h1 {
+        color: settings.$primary-color;
+        font-size: 1.5rem;
+      }
+    }
+
+    .cards-container {
+      display: flex;
+      gap: settings.$spacing-unit;
+      margin-bottom: settings.$spacing-unit * 2;
+
+      .card {
+        flex: 1;
+        background: #fff;
+        border-radius: settings.$border-radius;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: settings.$spacing-unit;
+        text-align: center;
+        font-weight: bold;
+      }
+    }
+
+    .table-section {
+      background: #fff;
+      border-radius: settings.$border-radius;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: settings.$spacing-unit;
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+          border: 1px solid #ddd;
+          padding: settings.$spacing-unit;
+          text-align: left;
+        }
+
+        th {
+          background-color: settings.$primary-color;
+          color: #fff;
+        }
+
+        tr:nth-child(even) {
+          background-color: settings.$background-color;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+
+    .sidebar {
+      width: 100%;
+      text-align: center;
+
+      ul {
+        display: flex;
+        justify-content: space-around;
+
+        li {
+          margin: 0;
+        }
+      }
+    }
+
+    .main-content {
+      .cards-container {
+        flex-direction: column;
+      }
+
+      .table-section {
+        table {
+          font-size: 0.9rem;
+
+          th,
+          td {
+            padding: math.div(settings.$spacing-unit, 2); // Corrigido para math.div()
+          }
+        }
+      }
+    }
+  }
+}

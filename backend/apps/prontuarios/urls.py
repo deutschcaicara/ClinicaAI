@@ -1,11 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProntuarioViewSet, ProntuarioList
+from . import views
 
 router = DefaultRouter()
-router.register(r'prontuarios', ProntuarioViewSet)
+router.register(r'prontuarios', views.ProntuarioViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('prontuarios/', ProntuarioList.as_view(), name='prontuario-list'),
 ]
